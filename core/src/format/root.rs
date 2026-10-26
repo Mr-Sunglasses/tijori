@@ -169,11 +169,15 @@ impl RootPointer {
                 file.len()
             )));
         }
-        if file[0] != ROOT_VERSION {
+        // A higher version comes from a newer Tijori; 0 was never written.
+        if file[0] > ROOT_VERSION {
             return Err(Error::unsupported(format!(
                 "root pointer version {}",
                 file[0]
             )));
+        }
+        if file[0] < ROOT_VERSION {
+            return Err(Error::damaged("root pointer version 0"));
         }
         let nonce: &[u8; AEAD_NONCE_LEN] = file[1..25].try_into().expect("24 bytes");
         let pt = aead_decrypt(key.key(), nonce, &file[25..], &ad(uuid, slot)).ok_or_else(|| {

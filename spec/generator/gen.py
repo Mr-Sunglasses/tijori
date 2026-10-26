@@ -13,6 +13,7 @@ that the committed copies match a fresh run.
 
 Usage:
     python gen.py [--out DIR]     write vectors (default: ../vectors)
+    python gen.py --only F...     write only some files (object.json and vault.json are random)
     python gen.py --check         regenerate deterministic files and compare
 """
 
@@ -686,6 +687,7 @@ def gen_object():
     mut("wrong kind", "directory object", "tampered", kind=KIND_FILE)
     mut("wrong object id", "directory object", "tampered", object_id=hx(det("object other id", 32)))
     mut("object_version 2", "directory object", "unsupported", set_byte=[0, 2])
+    mut("object_version 0", "directory object", "damaged", set_byte=[0, 0])
     assert dir_id and dir_obj
 
     def crafted(name, chunks, error, version=1):
@@ -749,6 +751,7 @@ def gen_root():
     flipped[30] ^= 0x04
     n("flipped ciphertext bit", bytes(flipped), "tampered")
     n("root_version 2", enc("v2", cb(fa), version=2), "unsupported")
+    n("root_version 0", enc("v0", cb(fa), version=0), "damaged")
     n("40 bytes", files["a"][:25] + bytes(15), "damaged")
     n("4097 bytes", b"\x01" + bytes(4096), "damaged")
     # Validly encrypted but malformed CBOR (only a key holder could write these).
@@ -1004,6 +1007,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--out", type=Path, default=here.parent / "vectors")
     ap.add_argument("--check", action="store_true", help="compare deterministic files with --out")
+    ap.add_argument("--only", nargs="+", metavar="FILE", help="write only these files (e.g. object.json vault.json)")
     args = ap.parse_args()
 
     if args.check:
@@ -1019,11 +1023,14 @@ def main() -> int:
         return 0
 
     args.out.mkdir(parents=True, exist_ok=True)
+    wanted = set(args.only or list(GENERATORS) + ["vault.json"])
     for name, gen in GENERATORS.items():
-        (args.out / name).write_text(dump(gen()))
-        print("wrote", name)
-    (args.out / "vault.json").write_text(dump(gen_vaults(args.out)))
-    print("wrote vault.json and vault/")
+        if name in wanted:
+            (args.out / name).write_text(dump(gen()))
+            print("wrote", name)
+    if "vault.json" in wanted:
+        (args.out / "vault.json").write_text(dump(gen_vaults(args.out)))
+        print("wrote vault.json and vault/")
     return 0
 
 

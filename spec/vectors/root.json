@@ -71,6 +71,13 @@
   },
   {
    "error": "damaged",
+   "file": "00c85d522b44e67a857b93532e391ecf50c1559f505434bd1287802bfe5dd81dafc5e608e92cb233344f7fbfac2db1db65954d9f1cef318256f397455a2dbc3e3fd05fb20159e9d862267a90180940dbcf737eb5bbcaaf17bf29a6d7c3608307e82c2abdc85e2cda945c462159c0a59117b5d63e4546bd5cc7059fd0bd2ddeb8a7c53319bc7120ab4c26d1e09c3a62aa006f",
+   "name": "root_version 0",
+   "slot": "a",
+   "vault_uuid": "2ebc921b5ea51e9708d3ed9fb29010e7"
+  },
+  {
+   "error": "damaged",
    "file": "0143b2a47d28a3a0bcc6dfb8d32dae98a72e8145a9740a8163000000000000000000000000000000",
    "name": "40 bytes",
    "slot": "a",

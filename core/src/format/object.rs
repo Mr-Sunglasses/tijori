@@ -262,8 +262,12 @@ impl<R: Read> ObjectReader<R> {
     ) -> Result<Self> {
         let mut prefix = [0u8; PREFIX_LEN];
         let n = fill(&mut input, &mut prefix).map_err(|e| Error::from_io(e, "reading object"))?;
-        if n >= 1 && prefix[0] != OBJECT_VERSION {
+        // A higher version comes from a newer Tijori; 0 was never written.
+        if n >= 1 && prefix[0] > OBJECT_VERSION {
             return Err(Error::unsupported(format!("object version {}", prefix[0])));
+        }
+        if n >= 1 && prefix[0] < OBJECT_VERSION {
+            return Err(Error::damaged("object version 0"));
         }
         if n < PREFIX_LEN {
             return Err(Error::tampered("object is truncated"));
