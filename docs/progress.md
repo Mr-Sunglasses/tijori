@@ -172,3 +172,8 @@ deletes `._*` files inside `TIJORI/`.
   real hardware to test against.
 - `keyslot add --recovery` keeps the plan's name; the global "unlock with the
   recovery phrase" flag is therefore `--with-recovery`.
+
+## Milestone 4 — Mount (FUSE) (started 2026-10-26)
+
+**Status:** spike done (`docs/macos-fuse.md`); **waiting for a decision** on
+the macOS backend before continuing, as the plan requires.
