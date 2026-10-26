@@ -38,6 +38,9 @@ enter your password, and your files are there. Unplug it, and they are not.
   manager, or keep everything inside the app (Private mode). On macOS,
   mounting needs [macFUSE](https://macfuse.github.io) 5; Private mode needs
   nothing extra.
+- **Backups that stay encrypted.** `tijori backup` keeps an up-to-date copy
+  on another drive or in any folder, copying only what changed;
+  `tijori restore` brings it back after a lost stick or a deleted vault.
 - **No network.** No telemetry, no accounts, no cloud. Free and open source.
 
 ## Platforms
@@ -47,8 +50,22 @@ enter your password, and your files are there. Unplug it, and they are not.
 | macOS | Planned for v1 | Tauri 2 desktop app + `tijori` CLI |
 | Linux | Planned for v1 | Tauri 2 desktop app + `tijori` CLI |
 | Android | Planned for v1 | Kotlin + Jetpack Compose, Rust core via UniFFI |
-| Windows | Later | — |
-| iOS | Future | — |
+| Windows | Later | Not started |
+| iOS | Future | Not started |
+
+## Documentation
+
+The user guide, command reference and security notes live in [`docs/`](docs/)
+and build into a website with [MkDocs](https://www.mkdocs.org):
+
+```sh
+python3 -m venv .venv-docs
+.venv-docs/bin/pip install -r docs/requirements.txt
+.venv-docs/bin/mkdocs serve      # then open http://127.0.0.1:8000
+```
+
+Start with [Where your files go](docs/guide/how-it-works.md) and
+[Backups and lost drives](docs/guide/backups.md).
 
 ## Repository layout
 

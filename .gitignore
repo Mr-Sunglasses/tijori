@@ -27,3 +27,8 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# Documentation site (mkdocs)
+/site/
+/.cache/
+.venv-docs/

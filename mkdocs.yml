@@ -1,0 +1,125 @@
+site_name: Tijori
+site_description: Encrypted vaults on USB drives for macOS, Linux and Android.
+site_author: The Tijori authors
+repo_name: Mr-Sunglasses/tijori
+repo_url: https://github.com/Mr-Sunglasses/tijori
+edit_uri: edit/main/docs/
+copyright: Free and open source. Apache-2.0 and GPL-3.0-or-later.
+
+docs_dir: docs
+exclude_docs: |
+  requirements.txt
+
+theme:
+  name: material
+  logo: assets/icon.svg
+  favicon: assets/icon.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: material/information-outline
+      tip: material/lightbulb-on-outline
+      warning: material/alert-outline
+      danger: material/shield-alert-outline
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to system preference
+  features:
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - toc.follow
+
+plugins:
+  - search
+  # Downloads web fonts and other external assets at build time, so readers
+  # of the site make no requests to third parties.
+  - privacy
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Get started:
+      - Install: getting-started/install.md
+      - Your first vault: getting-started/first-vault.md
+  - User guide:
+      - Where your files go: guide/how-it-works.md
+      - Working with files: guide/files.md
+      - Mounting as a folder: guide/mounting.md
+      - Passwords and recovery: guide/passwords.md
+      - Backups and lost drives: guide/backups.md
+      - Troubleshooting: guide/troubleshooting.md
+      - FAQ: faq.md
+  - Reference:
+      - Command line: reference/cli.md
+      - On your computer: reference/host.md
+  - Security:
+      - What Tijori protects: security/threat-model.md
+      - Cryptography: security/cryptography.md
+      - How a vault is stored: format/overview.md
+  - Project:
+      - Roadmap: project/roadmap.md
+      - Development: project/development.md
+      - Progress log: progress.md
+      - macOS mounting notes: macos-fuse.md
