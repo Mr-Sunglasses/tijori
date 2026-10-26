@@ -11,3 +11,7 @@
 
 pub mod crypto;
 pub mod error;
+pub mod names;
+pub mod padding;
+pub mod recovery;
+pub mod strength;
