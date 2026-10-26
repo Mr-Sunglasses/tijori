@@ -9,10 +9,21 @@
 
 #![forbid(unsafe_code)]
 
-pub mod crypto error format keys names padding recovery strength;
+pub mod crypto;
+pub mod error;
+pub mod format;
+#[cfg(feature = "host")]
+pub mod host;
+pub mod keys;
+pub mod names;
+pub mod padding;
+pub mod recovery;
 pub mod rollback;
 pub mod storage;
+pub mod strength;
+pub mod vault;
 
 pub use error::{Error, ErrorClass, Result, StorageError};
 pub use keys::{Keyfile, Password, UnlockSecret};
 pub use recovery::RecoveryPhrase;
+pub use vault::{Entry, EntryKind, FileMeta, OpenMode, Vault, VaultPath};
