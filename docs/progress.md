@@ -1,6 +1,6 @@
 # Progress
 
-## Milestone 0 — Repository and CI (2026-10-26)
+## Milestone 0: Repository and CI (2026-10-26)
 
 **Status:** done. CI green on GitHub (private repo `Mr-Sunglasses/tijori`).
 
@@ -32,7 +32,7 @@
 - Frontend lint (`eslint`, `tsc`), `npm audit`, fuzz smoke, Android, e2e and
   vector-regeneration CI jobs are added together with their code (Plan §7).
 
-## Milestone 1 — Crypto, format and test vectors (2026-10-26)
+## Milestone 1: Crypto, format and test vectors (2026-10-26)
 
 **Status:** done.
 
@@ -56,7 +56,7 @@
 **Acceptance**
 - Every vector passes, including all negative cases with the exact class.
   `dryoc` matches libsodium for every primitive.
-- Property tests: object round trips for random sizes 0–1 MiB plus every chunk
+- Property tests: object round trips for random sizes from 0 to 1 MiB plus every chunk
   boundary (0, 1, 65 527 … 131 073); Padmé ≤ 11.7% overhead, monotonic,
   idempotent; CBOR encode/decode round trip; decoder never panics.
 - Each fuzz target ran 10 minutes locally (≈ 29 million runs in total), no crashes.
@@ -78,7 +78,7 @@
 - Empty keyslots are recognised by `slot_type = 0` alone; their other bytes
   are covered by the header MAC rather than rejected while parsing.
 
-## Milestone 2 — Vault engine (2026-10-26)
+## Milestone 2: Vault engine (2026-10-26)
 
 **Status:** done.
 
@@ -130,7 +130,7 @@
   `zbus`), reached only through `keyring`'s Linux Secret Service store. Not
   vulnerabilities; revisit when `keyring` updates.
 
-## Milestone 3 — CLI (2026-10-26)
+## Milestone 3: CLI (2026-10-26)
 
 **Status:** done, except the optional `tijori format` (not implemented, see below).
 
@@ -173,7 +173,7 @@ deletes `._*` files inside `TIJORI/`.
 - `keyslot add --recovery` keeps the plan's name; the global "unlock with the
   recovery phrase" flag is therefore `--with-recovery`.
 
-## Milestone 4 — Mount (FUSE) (2026-10-26)
+## Milestone 4: Mount (FUSE) (2026-10-26)
 
 **Status:** done. Backend decision: macFUSE 5 with its FSKit backend on macOS
 (see `docs/macos-fuse.md`), `fuser` on Linux.
@@ -238,3 +238,60 @@ deletes `._*` files inside `TIJORI/`.
 - Mount mode on macOS needs macFUSE 5 and a one-time "File System Extensions"
   switch. Private mode needs nothing. Proposed for v1.1: our own FSKit
   extension instead of macFUSE (needs an Apple Developer ID).
+
+## After Milestone 4: CLI and core improvements, documentation (2026-10-27)
+
+**Status:** done. Requested after the user tested Milestones 0 to 4 on their
+own drive.
+
+- **Backups** (`core/src/vault/backup.rs`): `Vault::backup_to` makes another
+  folder or drive an exact, encrypted copy of the vault. Incremental (an
+  object already there with the right size is kept), every copied object is
+  checked against its hash before it becomes visible, objects the vault no
+  longer uses are removed. Write order: objects, one root slot, header,
+  the other slot, then clean-up; the copy's own newest slot is never
+  overwritten first. Refuses a different vault, an unidentifiable `TIJORI`
+  folder, and a copy with changes the vault lacks (`Error::Diverged`,
+  overridable with `force`). No format change.
+- CLI: `tijori backup <DEST> [--force]` (also in `shell`) and
+  `tijori restore <BACKUP> <DRIVE> [--force]`. Notes when the backup is on
+  the same drive as the vault.
+- CLI: Ctrl+C during `put`, `get`, `verify`, `rekey` and `backup` now
+  cancels through the progress callbacks instead of killing the process. This
+  fixes two real problems: an interrupted `get` could leave a partly
+  decrypted `.tijori-partial` file behind, and an interrupted write left the
+  vault lock in place.
+- CLI: `tijori completions <shell>` (clap_complete), help text for every
+  argument.
+- Core: GC's clean-up of `._*` and `.tmp` files is shared with backups and no
+  longer counted as "removed objects".
+- **Documentation site** (MkDocs + Material, `mkdocs.yml`, `docs/`): install,
+  first vault, where your files go, working with files, mounting,
+  passwords and recovery, backups and lost drives, troubleshooting, FAQ,
+  command reference, files on the host, threat model, cryptography, format
+  overview, roadmap, development. The `privacy` plugin downloads fonts and
+  scripts at build time, so readers' browsers contact no third parties.
+  CI builds it with `--strict`.
+
+**Tests**
+- Core: round trip and incremental behaviour, refusal cases, a damaged
+  source object never copied, cancel keeps the old copy, and crash injection
+  at every write of a backup (fail, tear, delete) with and without a re-key
+  in between. After a re-key the copy's slots cannot be decrypted, so an
+  interrupted backup may fall back to the copy's previous revision (still a
+  whole state); rerunning always completes.
+- CLI snapshots for backup, repeated backup, restore after deleting the
+  vault, and the diverged refusal. `scripts/e2e.sh` deletes the vault from a
+  real exFAT image and restores it.
+- Ctrl+C checked by hand on a 572 MiB file: no lock, no `.tmp`, no partial
+  output left.
+
+**Open questions for the user**
+- GC still runs only on `tijori gc` and after a re-key. Running it
+  automatically (for example at the end of a writable session) would keep
+  drives from filling with old versions; it is a behaviour choice, not a
+  format change.
+- An idle `shell` or `mount` refreshes the lock only when it commits, so after
+  10 idle minutes its lock looks stale to other devices.
+- Material for MkDocs announces end of life in May 2027; its successor
+  Zensical reads the same `mkdocs.yml`.
