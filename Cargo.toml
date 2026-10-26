@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = ["core", "cli", "mount", "ffi", "desktop/src-tauri"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+# Plan §0 rule 5: any `unsafe` outside core/ needs a `// SAFETY:` comment.
+undocumented_unsafe_blocks = "deny"
+dbg_macro = "deny"

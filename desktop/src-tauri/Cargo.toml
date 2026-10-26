@@ -1,0 +1,11 @@
+[package]
+name = "tijori-desktop"
+description = "Tijori desktop app backend (Tauri 2)"
+license = "GPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

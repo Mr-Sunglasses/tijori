@@ -1,0 +1,29 @@
+# Rust
+/target/
+
+# Fuzzing
+/fuzz/target/
+/fuzz/corpus/
+/fuzz/artifacts/
+/fuzz/coverage/
+
+# Desktop frontend
+node_modules/
+/desktop/dist/
+
+# Android
+/android/.gradle/
+/android/build/
+/android/**/build/
+/android/local.properties
+/android/.idea/
+*.iml
+
+# Python (spec/generator)
+__pycache__/
+.venv/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
