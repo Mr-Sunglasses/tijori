@@ -9,14 +9,8 @@
 
 #![forbid(unsafe_code)]
 
-pub mod crypto;
-pub mod error;
-pub mod format;
-pub mod keys;
-pub mod names;
-pub mod padding;
-pub mod recovery;
-pub mod strength;
+pub mod crypto error format keys names padding recovery strength;
+pub mod storage;
 
 pub use error::{Error, ErrorClass, Result, StorageError};
 pub use keys::{Keyfile, Password, UnlockSecret};
