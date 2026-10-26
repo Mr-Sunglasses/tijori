@@ -1,0 +1,20 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"keyslot\", \"add\", \"--recovery\"], &format!(\"{PW}\\nI UNDERSTAND\\n\"))"
+---
+exit: 0
+--- stdout
+Added a recovery phrase in keyslot 4.
+
+Your recovery phrase. Write it down and keep it somewhere safe; it is shown only once:
+
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+
+If you lose both your password and this recovery phrase, your files cannot be recovered by anyone.
+
+--- stderr

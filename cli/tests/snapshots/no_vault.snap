@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.run(&[\"--vault\", &e.path(\"src\"), \"ls\"], \"\")"
+---
+exit: 1
+--- stdout
+--- stderr
+tijori: no Tijori vault at [TMP]/src

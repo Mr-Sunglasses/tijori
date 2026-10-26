@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: e.init()
+---
+exit: 1
+--- stdout
+--- stderr
+tijori: [TMP]/drive already has a Tijori vault

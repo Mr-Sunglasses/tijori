@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"mv\", \"/docs/hello.txt\", \"/a/b\"], &pw())"
+---
+exit: 0
+--- stdout
+Moved /docs/hello.txt to /a/b/hello.txt
+--- stderr

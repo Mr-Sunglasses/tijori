@@ -1,0 +1,7 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"ls\"], &pw())"
+---
+exit: 0
+--- stdout
+--- stderr

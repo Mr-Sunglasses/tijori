@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"break-lock\", \"--force\"], \"BREAK\\n\")"
+---
+exit: 0
+--- stdout
+Lock removed.
+--- stderr
+Breaking the lock while another Tijori is writing can lose that writer's latest changes.

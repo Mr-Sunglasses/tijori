@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"cat\", \"/docs/hello.txt\"], &pw())"
+---
+exit: 0
+--- stdout
+hello tijori
+--- stderr

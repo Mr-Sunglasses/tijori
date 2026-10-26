@@ -1,0 +1,22 @@
+---
+source: cli/tests/cli.rs
+expression: e.init()
+---
+exit: 0
+--- stdout
+
+Your recovery phrase. Write it down and keep it somewhere safe; it is shown only once:
+
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+
+If you lose both your password and this recovery phrase, your files cannot be recovered by anyone.
+
+Vault created on [TMP]/drive.
+--- stderr
+Creating a Tijori vault on [TMP]/drive.
+WARNING: TIJORI_TEST_FAST_KDF is set: using test-only weak key derivation.

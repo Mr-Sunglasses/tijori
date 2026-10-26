@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"keyslot\", \"remove\", \"2\"], &format!(\"{PW2}\\n\"))"
+---
+exit: 0
+--- stdout
+Removed keyslot 2.
+That was the keyslot you unlocked with; use another one next time.
+--- stderr

@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"rm\", \"-r\", \"/docs\"], &pw())"
+---
+exit: 0
+--- stdout
+Deleted /docs
+--- stderr

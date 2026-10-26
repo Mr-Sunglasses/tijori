@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"put\", &e.path(\"src/hello.txt\"), &e.path(\"src/sub\"), \"/docs\"],\n&pw())"
+---
+exit: 0
+--- stdout
+Added 2 files (4.9 KiB) and 1 folder to /docs.
+--- stderr

@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"verify\"], &pw())"
+---
+exit: 0
+--- stdout
+Checked 3 folders and 1 file (13 B).
+No problems found.
+--- stderr

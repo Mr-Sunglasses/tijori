@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"rm\", \"/docs\"], &pw())"
+---
+exit: 1
+--- stdout
+--- stderr
+tijori: folder is not empty: /docs

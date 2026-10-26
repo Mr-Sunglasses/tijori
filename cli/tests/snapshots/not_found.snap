@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"cat\", \"/missing.txt\"], &pw())"
+---
+exit: 1
+--- stdout
+--- stderr
+tijori: not found: /missing.txt

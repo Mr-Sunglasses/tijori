@@ -1,0 +1,11 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"settings\", \"--padding\", \"off\", \"--label\", \"Photos\"], &pw())"
+---
+exit: 0
+--- stdout
+Settings saved. Padding applies to files added from now on.
+Label:        Photos
+Padding:      off
+Private only: off
+--- stderr

@@ -1,0 +1,10 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"settings\"], &pw())"
+---
+exit: 0
+--- stdout
+Label:        Family
+Padding:      on
+Private only: off
+--- stderr

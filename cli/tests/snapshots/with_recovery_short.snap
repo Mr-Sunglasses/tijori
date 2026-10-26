@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"--with-recovery\", \"ls\"], &format!(\"{}\\n\", short.join(\" \")))"
+---
+exit: 1
+--- stdout
+--- stderr
+tijori: a recovery phrase has 24 words, this one has 23

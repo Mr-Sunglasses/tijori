@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"ls\", \"-l\", \"/a/b\"], &pw())"
+---
+exit: 0
+--- stdout
+-           13  [DATETIME]  hello.txt
+--- stderr

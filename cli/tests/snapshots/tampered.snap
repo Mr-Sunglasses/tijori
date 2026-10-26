@@ -1,0 +1,10 @@
+---
+source: cli/tests/cli.rs
+expression: file_case.clone()
+---
+exit: 3
+--- stdout
+Checked 1 folder and 0 files (13 B).
+TAMPERED /hello.txt: the vault has been tampered with: a file object does not match its hash
+--- stderr
+tijori: the vault has been tampered with: 1 problem(s) found

@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"passwd\"], &format!(\"{PW}\\n{PW2}\\n\"))"
+---
+exit: 0
+--- stdout
+Changed the password of keyslot 0.
+Your password is changed. Someone who copied this drive before, and knows the old password, can still open that old copy. To lock them out of new changes too, re-key the vault.
+--- stderr

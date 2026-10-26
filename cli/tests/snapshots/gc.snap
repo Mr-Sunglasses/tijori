@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"gc\"], &pw())"
+---
+exit: 0
+--- stdout
+Removed 6 unused objects (888 B); 8 in use.
+--- stderr

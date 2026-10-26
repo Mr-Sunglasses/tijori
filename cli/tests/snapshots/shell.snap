@@ -1,0 +1,21 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"shell\"], &script)"
+---
+exit: 1
+--- stdout
+Added 1 file (13 B) to /.
+hello.txt
+Created /docs
+Moved /hello.txt to /docs/hello.txt
+-           13  [DATETIME]  hello.txt
+hello tijori
+--- stderr
+Vault unlocked. Type `help` for commands, `exit` to lock.
+error: unrecognized subcommand 'bogus'
+
+Usage: <COMMAND>
+
+For more information, try 'help'.
+tijori: folder is not empty: /docs
+Vault locked.

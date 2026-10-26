@@ -1,0 +1,22 @@
+---
+source: cli/tests/cli.rs
+expression: "e.run(&[\"put\", \"--help\"], \"\")"
+---
+exit: 0
+--- stdout
+Add files and folders (recursively) to a vault folder
+
+Usage: tijori put [OPTIONS] <LOCAL>... <VAULT_DIR>
+
+Arguments:
+  <PATH> <PATH>...  Local files or folders, then the vault folder to put them in
+
+Options:
+      --vault <PATH>         The drive, or its TIJORI folder. Found automatically when exactly one
+                             vault is mounted
+      --with-recovery        Unlock with the 24-word recovery phrase instead of the password
+      --with-keyfile <PATH>  Unlock a password + keyfile slot with this keyfile
+      --password-stdin       Read passwords, phrases and confirmations from standard input, one per
+                             line, instead of prompting on the terminal
+  -h, --help                 Print help
+--- stderr

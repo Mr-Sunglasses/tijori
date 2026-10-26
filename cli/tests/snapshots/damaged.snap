@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"ls\"], &pw())"
+---
+exit: 4
+--- stdout
+--- stderr
+tijori: the vault is damaged: neither root pointer can be read

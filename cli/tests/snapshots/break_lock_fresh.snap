@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"break-lock\"], \"\")"
+---
+exit: 6
+--- stdout
+--- stderr
+tijori: the lock was refreshed [N] minutes ago, so a Tijori may still be writing. If you are sure nothing else is using this drive, run `tijori break-lock --force`.

@@ -1,0 +1,54 @@
+---
+source: cli/tests/cli.rs
+expression: "e.run(&[\"--help\"], \"\")"
+---
+exit: 0
+--- stdout
+Tijori turns a USB drive into an encrypted vault that opens on macOS, Linux and Android.
+
+Exit codes: 0 ok, 1 other error, 2 wrong password/keyfile/phrase, 3 tampered, 4 damaged, 5 needs a
+newer Tijori, 6 locked by another writer.
+
+Usage: tijori [OPTIONS] <COMMAND>
+
+Commands:
+  init        Create a vault on a drive
+  shell       Unlock once and run several commands; lock on exit
+  break-lock  Remove a lock left behind by a Tijori that is no longer running
+  ls          List a folder
+  put         Add files and folders (recursively) to a vault folder
+  get         Copy files and folders out of the vault into a local folder
+  mkdir       Create a folder
+  mv          Move or rename a file or folder
+  rm          Delete a file, or a folder with -r
+  cat         Print a file to standard output
+  passwd      Change the password of a password slot
+  keyslot     List, add or remove keyslots
+  rekey       Re-encrypt everything under a new master key. Old copies of the header, and every old
+              password, stop working
+  verify      Check every hash and decrypt every chunk
+  gc          Delete encrypted objects nothing refers to any more
+  info        Show format version, settings, keyslots and revision
+  settings    Show or change vault settings
+  help        Print this message or the help of the given subcommand(s)
+
+Options:
+      --vault <PATH>
+          The drive, or its TIJORI folder. Found automatically when exactly one vault is mounted
+
+      --with-recovery
+          Unlock with the 24-word recovery phrase instead of the password
+
+      --with-keyfile <PATH>
+          Unlock a password + keyfile slot with this keyfile
+
+      --password-stdin
+          Read passwords, phrases and confirmations from standard input, one per line, instead of
+          prompting on the terminal
+
+  -h, --help
+          Print help (see a summary with '-h')
+
+  -V, --version
+          Print version
+--- stderr

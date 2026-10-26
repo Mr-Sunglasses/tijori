@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"ls\"], &pw())"
+---
+exit: 5
+--- stdout
+--- stderr
+tijori: this vault needs a newer version of Tijori: vault format 2.x

@@ -1,0 +1,23 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"rekey\"], &format!(\"{PW2}\\n{PW}\\nI UNDERSTAND\\n\"))"
+---
+exit: 0
+--- stdout
+Re-keying re-encrypts every file under a new master key. Afterwards the vault has exactly
+one password and one new recovery phrase; other keyslots and the old recovery phrase stop working.
+Re-keyed: revision 3.
+
+Your recovery phrase. Write it down and keep it somewhere safe; it is shown only once:
+
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+  [recovery phrase row]
+
+If you lose both your password and this recovery phrase, your files cannot be recovered by anyone.
+
+--- stderr
+WARNING: TIJORI_TEST_FAST_KDF is set: using test-only weak key derivation.

@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"keyslot\", \"add\"], &format!(\"{PW}\\n{PW2}\\n\"))"
+---
+exit: 0
+--- stdout
+Added a password in keyslot 2.
+--- stderr
+WARNING: TIJORI_TEST_FAST_KDF is set: using test-only weak key derivation.

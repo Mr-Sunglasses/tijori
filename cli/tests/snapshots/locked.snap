@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"mkdir\", \"/x\"], &pw())"
+---
+exit: 6
+--- stdout
+--- stderr
+tijori: the vault is in use by Tijori on another device (lock refreshed [N] minutes ago). If nothing else is using this drive, run `tijori break-lock`.

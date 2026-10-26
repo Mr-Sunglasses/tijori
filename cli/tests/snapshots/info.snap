@@ -1,0 +1,17 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"info\"], &pw())"
+---
+exit: 0
+--- stdout
+Drive:        [TMP]/drive
+Format:       1.0
+Vault ID:     [UUID]
+Revision:     5
+Last written: [DATETIME] UTC
+Label:        Family
+Padding:      on
+Private only: off
+Keyslots:     0: password, Argon2id 64 MiB, t=2; 1: recovery phrase
+Opened:       read-only
+--- stderr

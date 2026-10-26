@@ -1,0 +1,12 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"--with-keyfile\", &e.path(\"keyfile\"), \"keyslot\", \"list\"],\n&format!(\"{PW2}\\n\"))"
+---
+exit: 0
+--- stdout
+Slot  Type
+   0  password, Argon2id 64 MiB, t=2
+   1  recovery phrase
+   3  password + keyfile, Argon2id 64 MiB, t=2  (used to unlock)
+   4  recovery phrase
+--- stderr

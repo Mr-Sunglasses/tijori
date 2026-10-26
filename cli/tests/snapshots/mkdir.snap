@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"mkdir\", \"-p\", \"/a/b\"], &pw())"
+---
+exit: 0
+--- stdout
+Created /a/b
+--- stderr
