@@ -10,6 +10,7 @@ publish.workspace = true
 [dependencies]
 bip39 = { version = "3.0", default-features = false, features = ["std", "zeroize"] }
 dryoc = { version = "2.0", default-features = false, features = ["std", "protected"] }
+keyring = { version = "4.2", optional = true }
 secrecy = "0.10"
 subtle = "2.6"
 thiserror = "2.0"
@@ -25,3 +26,8 @@ tempfile = "3"
 
 [lints]
 workspace = true
+
+[features]
+# OS integration for desktop frontends: app data folder, device ID and the
+# rollback-record key in the OS keychain. Not used on Android.
+host = ["dep:keyring"]
