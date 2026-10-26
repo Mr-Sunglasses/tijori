@@ -44,6 +44,35 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --all-features --locked
 
+  vectors:
+    name: vectors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r spec/generator/requirements.txt
+      - name: Regenerate deterministic vectors with libsodium and compare
+        run: python spec/generator/gen.py --check
+
+  fuzz-smoke:
+    name: fuzz smoke
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: rustup toolchain install nightly --profile minimal
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-fuzz
+      - name: Run each target for 5 minutes
+        working-directory: fuzz
+        run: |
+          for t in $(cargo +nightly fuzz list); do
+            cargo +nightly fuzz run "$t" -- -max_total_time=300 -rss_limit_mb=4096
+          done
+
   supply-chain:
     name: supply chain
     runs-on: ubuntu-latest
