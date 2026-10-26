@@ -11,7 +11,13 @@
 
 pub mod crypto;
 pub mod error;
+pub mod format;
+pub mod keys;
 pub mod names;
 pub mod padding;
 pub mod recovery;
 pub mod strength;
+
+pub use error::{Error, ErrorClass, Result, StorageError};
+pub use keys::{Keyfile, Password, UnlockSecret};
+pub use recovery::RecoveryPhrase;
