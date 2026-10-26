@@ -34,6 +34,10 @@ enter your password, and your files are there. Unplug it, and they are not.
   phrase.
 - **Works everywhere you need it.** The drive stays exFAT, so the same vault
   opens on macOS, Linux and Android.
+- **Two ways to use it.** Mount the vault as a folder in Finder or your file
+  manager, or keep everything inside the app (Private mode). On macOS,
+  mounting needs [macFUSE](https://macfuse.github.io) 5; Private mode needs
+  nothing extra.
 - **No network.** No telemetry, no accounts, no cloud. Free and open source.
 
 ## Platforms

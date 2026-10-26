@@ -173,7 +173,68 @@ deletes `._*` files inside `TIJORI/`.
 - `keyslot add --recovery` keeps the plan's name; the global "unlock with the
   recovery phrase" flag is therefore `--with-recovery`.
 
-## Milestone 4 — Mount (FUSE) (started 2026-10-26)
+## Milestone 4 — Mount (FUSE) (2026-10-26)
 
-**Status:** spike done (`docs/macos-fuse.md`); **waiting for a decision** on
-the macOS backend before continuing, as the plan requires.
+**Status:** done. Backend decision: macFUSE 5 with its FSKit backend on macOS
+(see `docs/macos-fuse.md`), `fuser` on Linux.
+
+- `mount/src/fs.rs`: the file system, shared by both platforms and
+  path-based over the `Vault` API. Writes are buffered in memory (never on the
+  host disk) and encrypted on flush/close. Commits are coalesced to at most
+  one every 2 s, plus one at unmount. `._*`, `.DS_Store` and
+  `.metadata_never_index` cannot be created. Extended attributes are accepted
+  and discarded (spec §11). Owner-only modes (0700/0600).
+- `mount/src/linux.rs`: `fuser` 0.18 with its pure-Rust mount (no libfuse
+  needed at build time), mounted under `$XDG_RUNTIME_DIR/tijori/<label>`
+  (mode 0700), `default_permissions`, no `allow_other`.
+- `mount/src/macos.rs` + `macos_shim.c`: libfuse 3 high-level API. All
+  libfuse structs stay in C, compiled against macFUSE's headers. libfuse3 is
+  loaded with `dlopen`, so Tijori starts without macFUSE and reports that it
+  is missing. Mounts with `backend=fskit` under `/Volumes/<label>`, adds a
+  `.metadata_never_index` file and turns Spotlight off (both checked
+  afterwards), and clears the Quick Look cache after unmount.
+- Supervisor: unmounts and locks on request (`Stopper`, for the desktop app's
+  sleep, screen-lock and logout events), on SIGINT/SIGTERM in the CLI, on
+  eject, when the drive disappears, and after the idle timeout (default 15 min).
+  Mounts are refused for vaults set to private-only, and opened read-only when
+  another writer holds the lock.
+- CLI: `tijori mount [DRIVE] [MOUNTPOINT] [--idle-minutes N]`.
+
+**Acceptance**
+- `scripts/mount-test.sh` runs ordinary tools against the mounted volume:
+  write, append, read, `cp` of a 3 MB file, rename, `rm -r`, refusal of
+  `._*`/`.DS_Store`, `df`, owner-only modes. Then unmount on signal (vault
+  verifies, content persisted), external eject, and removal of the drive
+  while mounted (the vault then unlocks and verifies).
+  - macOS 27 + macFUSE 5.4 (FSKit): passes, locally and on a real USB stick
+    (exFAT, the user's Ventoy drive; only Tijori's own files were created and
+    then removed).
+  - Linux (Debian, fuse3, in Docker): passes; also runs in CI on Ubuntu.
+- Spotlight: after mounting, a file with a unique word could not be found
+  by name or content (`mdfind`) after 45 s; `mdutil -s` reports indexing
+  disabled. Time Machine reports the volume as excluded.
+- Real-drive CLI session (release build, real Argon2id 256 MiB, t=5 on this
+  Mac): unlock + list 0.7 s, 50 MB in 6.5 s (the stick's write speed),
+  out in 0.9 s, byte-identical, verify clean.
+
+**Found and fixed while testing**
+- macOS: `fuse_mount` reports success before FSKit has actually mounted (or
+  refused). The mount now waits until the mount point is live, and explains
+  how to enable the file system extension if it never appears.
+- macOS: calling `fuse_exit` before `umount` deadlocks FSKit's unmount. The
+  loop now keeps serving while the volume unmounts, with `fuse_exit` as a
+  last resort and timeouts on every external command.
+- `cp` failed on macFUSE because it copies extended attributes; they are now
+  accepted and discarded.
+- `tijori --vault D mount P` treated `P` as the drive.
+
+**Known limits (for `docs/threat-model.md` in Milestone 7)**
+- macOS tags every file a process writes with `com.apple.provenance`. On
+  exFAT this lands in `._*` files beside vault files and identifies the app
+  that wrote them. Processes cannot remove the tag. GC deletes the `._*`
+  files inside `TIJORI/`, but new writes recreate them.
+- Large files are edited in memory (limit 1 GiB per open-for-write file);
+  reads of files over 16 MiB stream and seek forward only, reopening to go back.
+- Mount mode on macOS needs macFUSE 5 and a one-time "File System Extensions"
+  switch. Private mode needs nothing. Proposed for v1.1: our own FSKit
+  extension instead of macFUSE (needs an Apple Developer ID).

@@ -4,9 +4,8 @@
 through FUSE-T's libfuse-compatible library? If not, what should Tijori use
 to mount vaults on macOS?
 
-**Status:** research done; nothing was installed on the test Mac (macOS 27.0.1,
-Apple silicon), because every option needs a system-level installer and admin
-rights. **Needs a decision before Milestone 4 continues.**
+**Status:** decided and implemented: macFUSE 5 with the FSKit backend, through
+libfuse 3's high-level API (see "Outcome" at the end).
 
 ## How `fuser` mounts on macOS
 
@@ -81,3 +80,26 @@ So `fuser` needs a backend that hands out a FUSE device file descriptor.
   5.1.0 notes: <https://macfuse.github.io/2025/10/30/macfuse-5.1.0.html>.
 - FSKit has no device fd (XPC channel instead):
   <https://github.com/Netatalk/netatalk-client/issues/386>.
+
+## Outcome (2026-10-26)
+
+The user chose the FSKit recommendation. Implemented in `mount/src/macos.rs`
+and `mount/src/macos_shim.c`, tested on macOS 27.0.1 with macFUSE 5.4.0:
+
+- One-time setup on the user's side: install macFUSE, open `macfuse.app`
+  once, and enable it under System Settings → General → Login Items &
+  Extensions → File System Extensions. Without that switch, macOS refuses
+  with "File system extension not enabled"; Tijori says how to fix it.
+- No kernel extension and no Recovery-mode changes were needed.
+- Behaviour differences from the kernel backend that the code handles:
+  `fuse_mount` returns before the mount exists; unmounting needs the FUSE
+  loop to keep serving; `mdutil`/`tmutil` exit codes are unreliable, so
+  their resulting state is checked instead.
+- Spotlight found nothing inside a mounted vault; Time Machine reports it
+  excluded.
+
+**Users who do not install macFUSE** can still use everything except "show
+as a folder in Finder", through Private mode in the app. Proposed for v1.1:
+ship our own FSKit extension inside Tijori.app so Mount needs no third-party
+install (it still needs the one-time switch, and an Apple Developer ID to
+sign it).
