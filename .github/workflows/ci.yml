@@ -89,6 +89,26 @@ jobs:
       - name: Regenerate deterministic vectors with libsodium and compare
         run: python spec/generator/gen.py --check
 
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r docs/requirements.txt
+      - name: Build the documentation site
+        run: mkdocs build --strict
+        env:
+          NO_MKDOCS_2_WARNING: "1"
+      - name: No em or en dashes in the documentation
+        run: |
+          if grep -rn '—\|–' docs/ README.md mkdocs.yml; then
+            echo "Use a comma, colon or parentheses instead of em and en dashes." >&2
+            exit 1
+          fi
+
   fuzz-smoke:
     name: fuzz smoke
     if: github.event_name == 'schedule'
