@@ -1,0 +1,81 @@
+{
+ "cases": [
+  {
+   "mk": "60d1bc343e9ee10eeb77291d14a8118ddbebadd4641c4580c51e83f65463e0c7",
+   "name": "type1 password",
+   "password": "correct horse battery staple",
+   "slot": "01010000000001000200000001000000b1005acc594912c8ab7cf7bfb95e9f9770ffd87f75a079f926b68cbc8aa821388befd6769f3c6a93f6dc7c0aa0dd0e17d0c9ddf8f5e1084e158b4af05bcdc98ea3d87af421b9c338c416f77b72b4307c8e3ff08d36e8cd6f000000000000000000000000000000000000000000000000",
+   "slot_index": 0,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "keyfile_hex": "3750f8c05ae44252c1a972b1e6d199a0462bce6f2bf37acabb0671b0fb06433294bde819c3df8d94aef5fcb1b5ce0ba9ab33e2691d383132ed2c2ae03dbb8d63",
+   "mk": "60d1bc343e9ee10eeb77291d14a8118ddbebadd4641c4580c51e83f65463e0c7",
+   "name": "type2 password + keyfile",
+   "password": "keyfile pass phrase",
+   "slot": "020100000000010002000000010000000bdbdac071bc0f37935ad61ba16db025f0f8b6f7b18cdbdc5572973d89a7bdd05a0789ba7618320bd623d1f3bd3b98079d23edce8aca0cb6cc48fcc9cc274e16815d7a04effa0bbec19303995d1e6dd4f740baf7112ec19d000000000000000000000000000000000000000000000000",
+   "slot_index": 1,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "mk": "60d1bc343e9ee10eeb77291d14a8118ddbebadd4641c4580c51e83f65463e0c7",
+   "name": "type3 recovery phrase",
+   "recovery_phrase": "unfold foam better matrix visual hurry panda ball alpha trial wisdom game reflect job blanket mobile vault diagram uniform earn aspect theme matrix focus",
+   "slot": "030200000000000000000000000000006b7681e272fafe46ea6d3d0043819b9258d59a92a120705228e5ee6c4f937a471c0a69769aa4a10427a7b450e0d386d5677cd54ae8c2cbf22275e97c71d3a799141ff6bba5056fb7943b62b00e4aaebf47d04eeeeee3506d000000000000000000000000000000000000000000000000",
+   "slot_index": 5,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  }
+ ],
+ "description": "Wrap and unwrap of MK in one keyslot (section 5.2)",
+ "negative": [
+  {
+   "error": "wrong_secret",
+   "name": "changed argon_ops",
+   "password": "correct horse battery staple",
+   "slot": "01010000000001000300000001000000b1005acc594912c8ab7cf7bfb95e9f9770ffd87f75a079f926b68cbc8aa821388befd6769f3c6a93f6dc7c0aa0dd0e17d0c9ddf8f5e1084e158b4af05bcdc98ea3d87af421b9c338c416f77b72b4307c8e3ff08d36e8cd6f000000000000000000000000000000000000000000000000",
+   "slot_index": 0,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "error": "wrong_secret",
+   "name": "swapped slot index",
+   "password": "correct horse battery staple",
+   "slot": "01010000000001000200000001000000b1005acc594912c8ab7cf7bfb95e9f9770ffd87f75a079f926b68cbc8aa821388befd6769f3c6a93f6dc7c0aa0dd0e17d0c9ddf8f5e1084e158b4af05bcdc98ea3d87af421b9c338c416f77b72b4307c8e3ff08d36e8cd6f000000000000000000000000000000000000000000000000",
+   "slot_index": 1,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "error": "wrong_secret",
+   "name": "other vault uuid",
+   "password": "correct horse battery staple",
+   "slot": "01010000000001000200000001000000b1005acc594912c8ab7cf7bfb95e9f9770ffd87f75a079f926b68cbc8aa821388befd6769f3c6a93f6dc7c0aa0dd0e17d0c9ddf8f5e1084e158b4af05bcdc98ea3d87af421b9c338c416f77b72b4307c8e3ff08d36e8cd6f000000000000000000000000000000000000000000000000",
+   "slot_index": 0,
+   "vault_uuid": "e5800f8d7eb659bb584e9a696fa36861"
+  },
+  {
+   "error": "wrong_secret",
+   "name": "wrong password",
+   "password": "correct horse battery staple!",
+   "slot": "01010000000001000200000001000000b1005acc594912c8ab7cf7bfb95e9f9770ffd87f75a079f926b68cbc8aa821388befd6769f3c6a93f6dc7c0aa0dd0e17d0c9ddf8f5e1084e158b4af05bcdc98ea3d87af421b9c338c416f77b72b4307c8e3ff08d36e8cd6f000000000000000000000000000000000000000000000000",
+   "slot_index": 0,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "error": "wrong_secret",
+   "keyfile_hex": "19a351c98d0c5b2fc3bf81e91d5b58bac4134a0d644af77c0ed0269550c25ec7151a52c615d52d4c784b8a3cda96ac436027422498494e93a00e27bfac39cae2",
+   "name": "wrong keyfile",
+   "password": "keyfile pass phrase",
+   "slot": "020100000000010002000000010000000bdbdac071bc0f37935ad61ba16db025f0f8b6f7b18cdbdc5572973d89a7bdd05a0789ba7618320bd623d1f3bd3b98079d23edce8aca0cb6cc48fcc9cc274e16815d7a04effa0bbec19303995d1e6dd4f740baf7112ec19d000000000000000000000000000000000000000000000000",
+   "slot_index": 1,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  },
+  {
+   "error": "wrong_secret",
+   "name": "wrong recovery phrase",
+   "recovery_phrase": "blind punch pigeon essence impose milk wage one debris hover buffalo marriage artwork tell manual pause analyst beef kidney vendor abuse hope million allow",
+   "slot": "030200000000000000000000000000006b7681e272fafe46ea6d3d0043819b9258d59a92a120705228e5ee6c4f937a471c0a69769aa4a10427a7b450e0d386d5677cd54ae8c2cbf22275e97c71d3a799141ff6bba5056fb7943b62b00e4aaebf47d04eeeeee3506d000000000000000000000000000000000000000000000000",
+   "slot_index": 5,
+   "vault_uuid": "c4f5e5701429455c33c3b821a3512c7f"
+  }
+ ]
+}

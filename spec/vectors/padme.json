@@ -1,0 +1,197 @@
+{
+ "cases": [
+  {
+   "l": 8,
+   "padme": 8
+  },
+  {
+   "l": 9,
+   "padme": 10
+  },
+  {
+   "l": 10,
+   "padme": 10
+  },
+  {
+   "l": 15,
+   "padme": 16
+  },
+  {
+   "l": 16,
+   "padme": 16
+  },
+  {
+   "l": 17,
+   "padme": 18
+  },
+  {
+   "l": 31,
+   "padme": 32
+  },
+  {
+   "l": 32,
+   "padme": 32
+  },
+  {
+   "l": 33,
+   "padme": 36
+  },
+  {
+   "l": 63,
+   "padme": 64
+  },
+  {
+   "l": 64,
+   "padme": 64
+  },
+  {
+   "l": 65,
+   "padme": 72
+  },
+  {
+   "l": 100,
+   "padme": 104
+  },
+  {
+   "l": 127,
+   "padme": 128
+  },
+  {
+   "l": 128,
+   "padme": 128
+  },
+  {
+   "l": 129,
+   "padme": 144
+  },
+  {
+   "l": 255,
+   "padme": 256
+  },
+  {
+   "l": 256,
+   "padme": 256
+  },
+  {
+   "l": 257,
+   "padme": 272
+  },
+  {
+   "l": 1000,
+   "padme": 1024
+  },
+  {
+   "l": 1023,
+   "padme": 1024
+  },
+  {
+   "l": 1024,
+   "padme": 1024
+  },
+  {
+   "l": 1025,
+   "padme": 1088
+  },
+  {
+   "l": 4095,
+   "padme": 4096
+  },
+  {
+   "l": 4096,
+   "padme": 4096
+  },
+  {
+   "l": 4097,
+   "padme": 4352
+  },
+  {
+   "l": 65535,
+   "padme": 65536
+  },
+  {
+   "l": 65536,
+   "padme": 65536
+  },
+  {
+   "l": 65537,
+   "padme": 67584
+  },
+  {
+   "l": 65544,
+   "padme": 67584
+  },
+  {
+   "l": 100008,
+   "padme": 100352
+  },
+  {
+   "l": 1000008,
+   "padme": 1015808
+  },
+  {
+   "l": 1048576,
+   "padme": 1048576
+  },
+  {
+   "l": 1048577,
+   "padme": 1081344
+  },
+  {
+   "l": 1000000008,
+   "padme": 1006632960
+  },
+  {
+   "l": 4294967295,
+   "padme": 4294967296
+  },
+  {
+   "l": 4294967296,
+   "padme": 4294967296
+  },
+  {
+   "l": 4294967297,
+   "padme": 4362076160
+  },
+  {
+   "l": 1099511627775,
+   "padme": 1099511627776
+  },
+  {
+   "l": 1099511627776,
+   "padme": 1099511627776
+  }
+ ],
+ "content_examples": [
+  {
+   "content_length": 0,
+   "disk_size": 50,
+   "stored_plaintext": 8
+  },
+  {
+   "content_length": 92,
+   "disk_size": 146,
+   "stored_plaintext": 104
+  },
+  {
+   "content_length": 992,
+   "disk_size": 1066,
+   "stored_plaintext": 1024
+  },
+  {
+   "content_length": 65536,
+   "disk_size": 67643,
+   "stored_plaintext": 67584
+  },
+  {
+   "content_length": 1000000,
+   "disk_size": 1016105,
+   "stored_plaintext": 1015808
+  },
+  {
+   "content_length": 1000000000,
+   "disk_size": 1006894105,
+   "stored_plaintext": 1006632960
+  }
+ ],
+ "description": "padme(L) for L >= 8 (section 7.3), and content length -> stored plaintext length"
+}

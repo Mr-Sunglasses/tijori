@@ -1,0 +1,98 @@
+{
+ "cases": [
+  {
+   "kek": "1d26a450b9841f2eff4a1cecd82b317827f05f58e269545e11db81bc0a3ee9c9",
+   "mem_kib": 65536,
+   "name": "type1 ascii",
+   "ops": 2,
+   "password": "correct horse battery staple",
+   "password_utf8_hex": "636f727265637420686f727365206261747465727920737461706c65",
+   "salt": "edc0bffba0607f3f75ab6206257616fa",
+   "slot_type": 1
+  },
+  {
+   "kek": "f1a34ff0c3e3f8931076f6100851449e04dc989cf13dea7a57c383c970c4dc7a",
+   "mem_kib": 65536,
+   "name": "type1 unicode nfc",
+   "ops": 2,
+   "password": "तिजोरी की चाबी – café",
+   "password_utf8_hex": "e0a4a4e0a4bfe0a49ce0a58be0a4b0e0a58020e0a495e0a58020e0a49ae0a4bee0a4ace0a58020e2809320636166c3a9",
+   "salt": "613c9576214490119794ba9413be3068",
+   "slot_type": 1
+  },
+  {
+   "kek": "70d787ae5947413258c796696c6ff68b94a036bd7c561e23486e0579c5bb59c7",
+   "mem_kib": 65536,
+   "name": "type1 nfd input is normalized to nfc",
+   "ops": 2,
+   "password": "café crème brûlée",
+   "password_utf8_hex": "63616665cc8120637265cc806d6520627275cc826c65cc8165",
+   "salt": "339a64bacf42f770bac7de9c829fb3f4",
+   "slot_type": 1
+  },
+  {
+   "kek": "e675dd957662828cfe028119b92880886b6970596ea7042e8b15563b27b359ff",
+   "mem_kib": 65536,
+   "name": "type1 ops 3",
+   "ops": 3,
+   "password": "correct horse battery staple",
+   "password_utf8_hex": "636f727265637420686f727365206261747465727920737461706c65",
+   "salt": "c167a21f7f89816df18bac3eda9b29c7",
+   "slot_type": 1
+  },
+  {
+   "argon_output": "4b6ab1f2271a4b784254ce85c454d949cb62c908d40a78368004c741f098b266",
+   "kek": "05079ac07bfcdc56c5d2f1544086a32c9826a0500131225e448adf576c5ade40",
+   "keyfile_hex": "5b51d28f1a62bc0076a1e5185e29b15ae6a8f339806af2d3b3cbd4ef404c3f565b659e960aa56053363336a1cabc4427f2116a38c2165909ca1f1bc7db06b8adbf6364d5e0e5df2b2127c10eb8041c7ec66779637d3f11282df6125d9c13b8792ad3c745",
+   "kf": "d09b1773509b4fd90b88c6babce9135c1e7d580b560f6fb2bc56c20480317621",
+   "mem_kib": 65536,
+   "name": "type2 password + keyfile",
+   "ops": 2,
+   "password": "keyfile pass phrase",
+   "password_utf8_hex": "6b657966696c65207061737320706872617365",
+   "salt": "ad716b477a87cf2f6a3b905fad94b575",
+   "slot_type": 2
+  },
+  {
+   "entropy": "76972bfaeb563ff95f9191eaa521f6806f8dc14302ae0e37ae8109dd4e71ccf9",
+   "kek": "8ddaa7429be0ada583f5b414403decabafbc19539907bffbb8220894ea96ae75",
+   "name": "type3 random",
+   "recovery_phrase": "isolate rich wrong stove glue witness layer cram turkey cinnamon laundry absorb web thing army fiction athlete runway park beauty stay decline crop cradle",
+   "salt": "443e5e84f69953a1e5ef1a3655715505",
+   "slot_type": 3
+  },
+  {
+   "entropy": "0000000000000000000000000000000000000000000000000000000000000000",
+   "kek": "1550db63cfb2c3dd2222312a27c207ef2129c4cc6dd802fe637f6c722297af90",
+   "name": "type3 zero entropy",
+   "recovery_phrase": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art",
+   "salt": "b47df9d2bb1d33e96603e82bc1cacdbe",
+   "slot_type": 3
+  }
+ ],
+ "description": "KEK derivation for slot types 1-3 (section 4)",
+ "negative": [
+  {
+   "error": "wrong_secret",
+   "keyfile_hex": "1ab385ee6ee233cd3fb0a1c1db769636a7668945e2781624bab77beb3ccb3df1916745635372cfadfa1a8447f3338d6c201af2e0b072f4f2169af92769f7c2205a98c12003883bad24e7988e4d4b64d4374705e5144e230576409fc729f162211c5dce87",
+   "mem_kib": 65536,
+   "must_not_equal": "05079ac07bfcdc56c5d2f1544086a32c9826a0500131225e448adf576c5ade40",
+   "name": "type2 wrong keyfile",
+   "ops": 2,
+   "password": "keyfile pass phrase",
+   "salt": "ad716b477a87cf2f6a3b905fad94b575",
+   "slot_type": 2
+  },
+  {
+   "argon_input_utf8_hex": "63616665cc8120637265cc806d6520627275cc826c65cc8165",
+   "argon_output": "299a2c4c03c056c0357d20c389d8b1091234acbc3740257eb2712c1d610d583f",
+   "error": "wrong_secret",
+   "mem_kib": 65536,
+   "must_not_equal": "70d787ae5947413258c796696c6ff68b94a036bd7c561e23486e0579c5bb59c7",
+   "name": "nfd bytes hashed without normalization",
+   "ops": 2,
+   "salt": "339a64bacf42f770bac7de9c829fb3f4",
+   "slot_type": 1
+  }
+ ]
+}

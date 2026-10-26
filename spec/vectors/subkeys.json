@@ -1,0 +1,43 @@
+{
+ "cases": [
+  {
+   "k_hmac": "f67f3c541bea78721f44d46cdc22bfe1de10ee13d4214309a28ca53a009eadc5",
+   "k_obj": "af0f162f9b3df1edb33d2e2bcd8d555ab9e2022b3f9124a19c74b849dcda462b",
+   "k_root": "070ff1068b73dae98d93ccfc06163bcb6725b5cc073e984654614fcdd435b883",
+   "mk": "1ec1597f219c142936e91f684a6f33ef092595ead814e4cc2bb906900bc15c2f",
+   "name": "random",
+   "object_keys": [
+    {
+     "kind": 1,
+     "object_id": "835316997a902d52ec1e090a0d4e4ba10a44a9c54077554f5da0432c12e3abdc",
+     "object_key": "06d346494da8c6c2aed32447e4416bc09915acc0fbc6f4dd57cc816a60481e43"
+    },
+    {
+     "kind": 2,
+     "object_id": "51e5e8260af38ee16e1b5f492cd857d06d4c0dc830db7ad2c495a0727ead0de2",
+     "object_key": "7aac1b7d43214ab88f7b2e91be0b6d44b94f7f3227b68db38dc394a9a2a289a3"
+    }
+   ]
+  },
+  {
+   "k_hmac": "32d2ee5d8e3c2e17f6ad14bda667512c94225e6f58389fd099f6a901fdf154ab",
+   "k_obj": "9dfcf60cd07f7a46c4a84a41d28c46bc96db8b7ad26801e470bad74144783a9a",
+   "k_root": "61b3aa58279efa616565eb60f08f670bab4c33f2d1d64ce7a5b02333ebe66c8c",
+   "mk": "0000000000000000000000000000000000000000000000000000000000000000",
+   "name": "zero",
+   "object_keys": [
+    {
+     "kind": 1,
+     "object_id": "a14b8fcbfcd9ba286f0c122e22e8ac718ff753f9fadba2a157cb101bb09c301c",
+     "object_key": "22ef9d350a0a06a0a08dc5b7e1f93bb78f83772a6b5150771522a7b9481f5aa9"
+    },
+    {
+     "kind": 2,
+     "object_id": "ccdf55ba18d9471558628d0c7ef9dbc5e7282e58c5143f4ebd14a57faa4bae39",
+     "object_key": "1a347cc9357015153d50cdab7b2621b11fa89538116dfc61ed06aa45dca9a55b"
+    }
+   ]
+  }
+ ],
+ "description": "KDF(MK, 1..3) subkeys and object keys (sections 3, 4)"
+}

@@ -1,0 +1,119 @@
+{
+ "description": "Complete vaults on disk (section 15). Object stream headers are random, so these change on every generator run. Argon2id uses the minimum parameters to keep tests fast.",
+ "vaults": [
+  {
+   "expected_rev": 2,
+   "mk": "6f09a5abdfdedeebae989cf009597a69b16134aadc9f9a043c1e5a8f0c8f1fcd",
+   "name": "basic",
+   "password": "correct horse battery staple",
+   "path": "vault/basic",
+   "recovery_phrase": "fortune kidney stone sweet tent gap corn repair balance either student village flat tell such grow aware pen crawl risk crew carpet flee olive",
+   "settings": {
+    "label": "Vectors",
+    "padding": true,
+    "private_only": false
+   },
+   "tree": [
+    {
+     "kind": "dir",
+     "path": "/Docs"
+    },
+    {
+     "content": {
+      "len": 70000,
+      "pattern": "mod251"
+     },
+     "kind": "file",
+     "path": "/Docs/big.bin",
+     "size": 70000
+    },
+    {
+     "content": {
+      "hex": "4e4643206e616d650a"
+     },
+     "kind": "file",
+     "path": "/Docs/café.txt",
+     "size": 9
+    },
+    {
+     "content": {
+      "hex": ""
+     },
+     "kind": "file",
+     "path": "/Docs/empty.bin",
+     "size": 0
+    },
+    {
+     "content": {
+      "hex": "48656c6c6f2c2054696a6f7269210a"
+     },
+     "kind": "file",
+     "path": "/hello.txt",
+     "size": 15
+    },
+    {
+     "content": {
+      "hex": "7365636f6e6420636f6d6d69740a"
+     },
+     "kind": "file",
+     "path": "/notes.txt",
+     "size": 14
+    }
+   ],
+   "vault_uuid": "1e2205a45c8d290741b76d8d7478bfaa"
+  },
+  {
+   "expected_rev": 1,
+   "mk": "6f09a5abdfdedeebae989cf009597a69b16134aadc9f9a043c1e5a8f0c8f1fcd",
+   "name": "torn newest root slot opens at the previous commit",
+   "password": "correct horse battery staple",
+   "path": "vault/torn-newest-root",
+   "recovery_phrase": "fortune kidney stone sweet tent gap corn repair balance either student village flat tell such grow aware pen crawl risk crew carpet flee olive",
+   "settings": {
+    "label": "Vectors",
+    "padding": true,
+    "private_only": false
+   },
+   "tree": [
+    {
+     "kind": "dir",
+     "path": "/Docs"
+    },
+    {
+     "content": {
+      "len": 70000,
+      "pattern": "mod251"
+     },
+     "kind": "file",
+     "path": "/Docs/big.bin",
+     "size": 70000
+    },
+    {
+     "content": {
+      "hex": "4e4643206e616d650a"
+     },
+     "kind": "file",
+     "path": "/Docs/café.txt",
+     "size": 9
+    },
+    {
+     "content": {
+      "hex": ""
+     },
+     "kind": "file",
+     "path": "/Docs/empty.bin",
+     "size": 0
+    },
+    {
+     "content": {
+      "hex": "48656c6c6f2c2054696a6f7269210a"
+     },
+     "kind": "file",
+     "path": "/hello.txt",
+     "size": 15
+    }
+   ],
+   "vault_uuid": "1e2205a45c8d290741b76d8d7478bfaa"
+  }
+ ]
+}
