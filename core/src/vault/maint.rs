@@ -509,16 +509,29 @@ impl Vault {
             )?;
         }
         let mut report = GcReport::default();
+        // `.tmp` files are incomplete writes (spec §2). `._*` files are
+        // AppleDouble metadata macOS writes on exFAT; they are not vault
+        // data and can carry metadata about our files.
+        let stray = |name: &str| name.ends_with(".tmp") || name.starts_with("._");
         for name in self.storage.list(VAULT_DIR)? {
-            if name.ends_with(".tmp") {
+            if stray(&name) {
                 self.storage.remove(&format!("{VAULT_DIR}/{name}"))?;
             }
         }
         for fan in self.storage.list(OBJECTS_DIR)? {
+            if stray(&fan) {
+                self.storage.remove(&format!("{OBJECTS_DIR}/{fan}"))?;
+                continue;
+            }
+            let is_fan =
+                fan.len() == 2 && fan.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
+            if !is_fan {
+                continue;
+            }
             let dir = format!("{OBJECTS_DIR}/{fan}");
             for name in self.storage.list(&dir)? {
                 let path = format!("{dir}/{name}");
-                let dead = if name.ends_with(".tmp") {
+                let dead = if stray(&name) {
                     true
                 } else if let Some(id) = name.strip_suffix(".tjo").and_then(parse_id) {
                     !live.contains(&id)

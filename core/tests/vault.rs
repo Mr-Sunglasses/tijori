@@ -753,6 +753,10 @@ fn gc_removes_only_unreachable_objects() {
     }
     s.put("TIJORI/objects/00/stray.tjo.tmp", vec![1, 2, 3]);
     s.put("TIJORI/vault.root.a.tmp", vec![1]);
+    // AppleDouble files macOS leaves on exFAT, including one shadowing a folder.
+    s.put("TIJORI/objects/._07", vec![0; 4096]);
+    s.put("TIJORI/._vault.header", vec![0; 4096]);
+    s.put("TIJORI/objects/zz/not-ours", vec![1]);
     let report = v.gc().unwrap();
     // Root folders and files from revs 1-4 go, except those rev 5's
     // predecessor (in the other root slot) still uses.
@@ -760,6 +764,11 @@ fn gc_removes_only_unreachable_objects() {
     assert_eq!(report.kept, 4, "two trees of one folder and one file each");
     assert!(s.get("TIJORI/objects/00/stray.tjo.tmp").is_none());
     assert!(s.get("TIJORI/vault.root.a.tmp").is_none());
+    assert!(s.get("TIJORI/objects/._07").is_none() && s.get("TIJORI/._vault.header").is_none());
+    assert!(
+        s.get("TIJORI/objects/zz/not-ours").is_some(),
+        "unknown folders are left alone"
+    );
     assert!(v.verify(&mut |_| true).unwrap().is_ok());
     assert_eq!(v.read_to_vec(&p("/f"), 10_000).unwrap(), pattern(1000, 4));
 }
