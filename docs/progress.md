@@ -129,3 +129,46 @@
   `zbus_names`, `zvariant_derive` marked unmaintained after being merged into
   `zbus`), reached only through `keyring`'s Linux Secret Service store. Not
   vulnerabilities; revisit when `keyring` updates.
+
+## Milestone 3 — CLI (2026-10-26)
+
+**Status:** done, except the optional `tijori format` (not implemented, see below).
+
+- `tijori` with `init`, `shell`, `ls [-l]`, `put`, `get`, `mkdir [-p]`, `mv`,
+  `rm [-r]`, `cat`, `passwd`, `keyslot list|add|add --keyfile|add --recovery|remove`,
+  `rekey`, `verify`, `gc`, `info`, `settings`, plus `break-lock`.
+- Global options: `--vault` (drive or its `TIJORI` folder; auto-detected when
+  exactly one vault is mounted under `/Volumes`, `/media/$USER`,
+  `/run/media/$USER`, `/media` or `/mnt`), `--with-recovery`,
+  `--with-keyfile`, `--password-stdin` (for scripts; passwords are never
+  echoed or passed as arguments).
+- Read commands open read-only and never take the lock; write commands take
+  it and commit once. Exit codes as in the plan.
+- `init` prints the phrase as 6 rows of 4 numbered words with the warning and
+  waits for `I UNDERSTAND`. New passwords below zxcvbn score 3 are refused
+  with the reason and the 6-word passphrase tip.
+- `get` never overwrites: clashing names (including case-only clashes on
+  case-insensitive folders) get a visible ` (n)` suffix; partial exports are
+  deleted on error. `put` skips symlinks and special files with a warning.
+
+**Acceptance**
+- `insta` snapshots for every command, every exit code (2 wrong secret,
+  3 tampered, 4 damaged, 5 unsupported, 6 locked), the shell and the help.
+- `scripts/e2e.sh` creates a real exFAT volume (hdiutil image on macOS, loop
+  image on Linux), runs every command, checks round trips byte for byte, the
+  executable bit, unplug/replug, re-key revoking the old recovery phrase,
+  tamper detection and timestamp neutralisation (vault files show year 2000).
+  Passes locally on macOS; runs in CI on macOS and Ubuntu.
+
+**Found by e2e:** macOS writes AppleDouble `._*` files on exFAT (for example
+`TIJORI/objects/._07`). GC now looks only at two-hex-digit fan-out folders and
+deletes `._*` files inside `TIJORI/`.
+
+**Decisions to review**
+- `TIJORI_TEST_FAST_KDF=1` makes new slots use the minimum Argon2id
+  parameters (with a loud warning). Tests and e2e only.
+- `tijori format <device>` (optional in the plan) is **not implemented**. It
+  is destructive and cannot be tested safely here; it needs your go-ahead and
+  real hardware to test against.
+- `keyslot add --recovery` keeps the plan's name; the global "unlock with the
+  recovery phrase" flag is therefore `--with-recovery`.
