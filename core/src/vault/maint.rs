@@ -1,6 +1,6 @@
 //! Keyslots, re-keying, verification and garbage collection.
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use super::open::{ArgonChoice, require_strong};
 use super::tree::{DirNode, ObjRef, Objects};
@@ -10,6 +10,7 @@ use crate::error::{Error, ErrorClass, Result};
 use crate::format::{ArgonParams, Header, Keyslot, RootPointer, RootSlot, SlotKind};
 use crate::keys::{Subkeys, kek_password, kek_password_keyfile, kek_recovery};
 use crate::recovery::RecoveryPhrase;
+use crate::storage::Storage;
 use crate::{Keyfile, Password};
 
 /// Spec §12: at most 256 levels, counting the root folder.
@@ -112,16 +113,17 @@ fn build_slot(
 }
 
 /// Walks a committed tree, collecting every object ID.
-fn mark_live(
+/// Collects the ID and file hash of every object in a tree.
+pub(super) fn mark_live(
     objects: &Objects,
     r: &ObjRef,
     depth: usize,
-    live: &mut HashSet<[u8; 32]>,
+    live: &mut HashMap<[u8; 32], [u8; 32]>,
 ) -> Result<()> {
     if depth > MAX_TREE_DEPTH {
         return Err(Error::damaged("the folder tree is deeper than the limit"));
     }
-    live.insert(r.id);
+    live.insert(r.id, r.hash);
     let dir = objects.load_dir(r)?;
     for e in &dir.entries {
         let child = ObjRef {
@@ -131,7 +133,7 @@ fn mark_live(
         if e.is_dir() {
             mark_live(objects, &child, depth + 1, live)?;
         } else {
-            live.insert(e.id);
+            live.insert(e.id, e.hash);
         }
     }
     Ok(())
@@ -348,7 +350,7 @@ impl Vault {
             id: self.root.root_id,
             hash: self.root.root_hash,
         };
-        let mut live = HashSet::new();
+        let mut live = HashMap::new();
         mark_live(&old, &root_ref, 1, &mut live)?;
         let mut rekeyer = Rekeyer {
             old,
@@ -487,7 +489,7 @@ impl Vault {
             storage: self.storage.as_ref(),
             k_obj: &self.keys.obj,
         };
-        let mut live = HashSet::new();
+        let mut live = HashMap::new();
         for slot in RootSlot::BOTH {
             let Ok(data) = self.storage.read(&root_path(slot)) else {
                 continue;
@@ -508,47 +510,53 @@ impl Vault {
                 &mut live,
             )?;
         }
-        let mut report = GcReport::default();
-        // `.tmp` files are incomplete writes (spec §2). `._*` files are
-        // AppleDouble metadata macOS writes on exFAT; they are not vault
-        // data and can carry metadata about our files.
-        let stray = |name: &str| name.ends_with(".tmp") || name.starts_with("._");
-        for name in self.storage.list(VAULT_DIR)? {
-            if stray(&name) {
-                self.storage.remove(&format!("{VAULT_DIR}/{name}"))?;
-            }
-        }
-        for fan in self.storage.list(OBJECTS_DIR)? {
-            if stray(&fan) {
-                self.storage.remove(&format!("{OBJECTS_DIR}/{fan}"))?;
-                continue;
-            }
-            let is_fan =
-                fan.len() == 2 && fan.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
-            if !is_fan {
-                continue;
-            }
-            let dir = format!("{OBJECTS_DIR}/{fan}");
-            for name in self.storage.list(&dir)? {
-                let path = format!("{dir}/{name}");
-                let dead = if stray(&name) {
-                    true
-                } else if let Some(id) = name.strip_suffix(".tjo").and_then(parse_id) {
-                    !live.contains(&id)
-                } else {
-                    false
-                };
-                if dead {
-                    report.freed_bytes += self.storage.len(&path).unwrap_or(0);
-                    self.storage.remove(&path)?;
-                    report.removed += 1;
-                } else {
-                    report.kept += 1;
-                }
-            }
-        }
-        Ok(report)
+        sweep(self.storage.as_ref(), &|id| live.contains_key(id))
     }
+}
+
+/// Deletes `.tjo` files that `keep` rejects, and stray files: `.tmp` files
+/// are incomplete writes (spec §2); `._*` files are AppleDouble metadata
+/// macOS writes on exFAT, which are not vault data and can carry metadata
+/// about our files.
+pub(super) fn sweep(storage: &dyn Storage, keep: &dyn Fn(&[u8; 32]) -> bool) -> Result<GcReport> {
+    let mut report = GcReport::default();
+    let stray = |name: &str| name.ends_with(".tmp") || name.starts_with("._");
+    for name in storage.list(VAULT_DIR)? {
+        if stray(&name) {
+            storage.remove(&format!("{VAULT_DIR}/{name}"))?;
+        }
+    }
+    for fan in storage.list(OBJECTS_DIR)? {
+        if stray(&fan) {
+            storage.remove(&format!("{OBJECTS_DIR}/{fan}"))?;
+            continue;
+        }
+        let is_fan = fan.len() == 2 && fan.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'));
+        if !is_fan {
+            continue;
+        }
+        let dir = format!("{OBJECTS_DIR}/{fan}");
+        for name in storage.list(&dir)? {
+            let path = format!("{dir}/{name}");
+            if stray(&name) {
+                // Not an object; deleted but not counted.
+                storage.remove(&path)?;
+                continue;
+            }
+            let dead = name
+                .strip_suffix(".tjo")
+                .and_then(parse_id)
+                .is_some_and(|id| !keep(&id));
+            if dead {
+                report.freed_bytes += storage.len(&path).unwrap_or(0);
+                storage.remove(&path)?;
+                report.removed += 1;
+            } else {
+                report.kept += 1;
+            }
+        }
+    }
+    Ok(report)
 }
 
 fn parse_id(hex: &str) -> Option<[u8; 32]> {

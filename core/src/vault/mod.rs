@@ -1,6 +1,7 @@
 //! The vault engine: create, unlock, read, write, commit, keyslots, re-key,
 //! verify and garbage collection, over any [`Storage`](crate::storage::Storage).
 
+mod backup;
 mod lock;
 mod maint;
 mod open;
@@ -11,6 +12,7 @@ mod tree;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+pub use backup::{BackupOptions, BackupReport};
 pub use lock::{LockInfo, STALE_AFTER_SECS, break_lock, read_lock};
 pub use maint::{GcReport, KeyslotInfo, NewSlot, VerifyProblem, VerifyReport};
 pub use open::{ArgonChoice, CreateOptions, ReadOnlyReason, UnlockOptions, UnlockReport};
@@ -118,6 +120,7 @@ pub enum Phase {
     Verify,
     Rekey,
     Gc,
+    Backup,
 }
 
 /// An unlocked vault. Keys live here, in locked memory where possible, and

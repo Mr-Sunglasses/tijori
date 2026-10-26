@@ -11,8 +11,8 @@ use tijori_core::format::RootSlot;
 use tijori_core::rollback::{MemRollbackStore, RollbackStatus, RollbackStore};
 use tijori_core::storage::{Fault, MemStorage, StdFsStorage, Storage};
 use tijori_core::vault::{
-    ArgonChoice, CreateOptions, HEADER_BACKUP_PATH, HEADER_PATH, NewSlot, ReadOnlyReason,
-    UnlockOptions, root_path,
+    ArgonChoice, BackupOptions, CreateOptions, HEADER_BACKUP_PATH, HEADER_PATH, NewSlot,
+    ReadOnlyReason, UnlockOptions, root_path,
 };
 use tijori_core::{
     Entry, EntryKind, Error, ErrorClass, FileMeta, Keyfile, OpenMode, Password, RecoveryPhrase,
@@ -848,6 +848,247 @@ fn huge_file_streams() {
         total += n as u64;
     }
     assert_eq!(total, LEN);
+}
+
+// --- Backups --------------------------------------------------------------------
+
+fn backup(src: &MemStorage, words: &str, dest: &MemStorage, force: bool) -> Result<(), Error> {
+    let mut v = unlock_with(src, &recovery(words), OpenMode::ReadOnly)?;
+    let opts = BackupOptions { force };
+    v.backup_to(Arc::new(dest.clone()), opts, &mut |_| true)?;
+    Ok(())
+}
+
+fn object_files(s: &MemStorage) -> Vec<String> {
+    s.files()
+        .into_iter()
+        .filter(|f| f.starts_with("TIJORI/objects/"))
+        .collect()
+}
+
+#[test]
+fn backup_copies_only_what_changed_and_opens_as_a_vault() {
+    let (src, words, _, cur) = populated();
+    let dest = MemStorage::new();
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadOnly).unwrap();
+    let first = v
+        .backup_to(
+            Arc::new(dest.clone()),
+            BackupOptions::default(),
+            &mut |_| true,
+        )
+        .unwrap();
+    assert!(first.copied > 0 && first.unchanged == 0, "{first:?}");
+    let again = v
+        .backup_to(
+            Arc::new(dest.clone()),
+            BackupOptions::default(),
+            &mut |_| true,
+        )
+        .unwrap();
+    assert_eq!((again.copied, again.removed), (0, 0), "{again:?}");
+    assert_eq!(again.unchanged, first.copied);
+    drop(v);
+    let mut b = unlock_with(&dest, &recovery(&words), OpenMode::ReadOnly).unwrap();
+    assert_eq!(snapshot(&mut b).unwrap(), cur);
+    assert!(b.verify(&mut |_| true).unwrap().is_ok());
+    assert!(dest.get("README-TIJORI.txt").is_some());
+    assert!(dest.get("TIJORI/.lock").is_none(), "lock released");
+    drop(b);
+
+    // Change the vault; the next backup brings the copy up to date and
+    // drops objects the vault no longer uses.
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    change_set(&mut v).unwrap();
+    let new = snapshot(&mut v).unwrap();
+    let report = v
+        .backup_to(
+            Arc::new(dest.clone()),
+            BackupOptions::default(),
+            &mut |_| true,
+        )
+        .unwrap();
+    assert!(report.copied > 0 && report.removed > 0, "{report:?}");
+    v.lock().unwrap();
+    assert_eq!(object_files(&dest), object_files(&src));
+    let mut b = unlock_with(&dest, &UnlockSecret::password(PASSWORD), OpenMode::ReadOnly).unwrap();
+    assert_eq!(snapshot(&mut b).unwrap(), new);
+}
+
+#[test]
+fn backup_refuses_other_vaults_and_diverged_copies() {
+    let (src, words, _, _) = populated();
+    let other = MemStorage::new();
+    create(&other).0.lock().unwrap();
+    let err = backup(&src, &words, &other, false).unwrap_err();
+    assert!(matches!(err, Error::AlreadyExists(_)), "{err}");
+    assert!(
+        matches!(
+            backup(&src, &words, &other, true),
+            Err(Error::AlreadyExists(_))
+        ),
+        "force never overwrites a different vault"
+    );
+
+    // Someone writes to the copy: copying over it would lose that change.
+    let dest = MemStorage::new();
+    backup(&src, &words, &dest, false).unwrap();
+    let mut b = unlock_with(&dest, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    b.write_bytes(&p("/only-in-backup"), b"x", meta()).unwrap();
+    b.lock().unwrap();
+    let err = backup(&src, &words, &dest, false).unwrap_err();
+    assert!(matches!(err, Error::Diverged(_)), "{err}");
+    backup(&src, &words, &dest, true).unwrap();
+    let mut b = unlock_with(&dest, &recovery(&words), OpenMode::ReadOnly).unwrap();
+    assert!(b.stat(&p("/only-in-backup")).is_err());
+
+    // A TIJORI folder that cannot be identified is left alone.
+    let odd = MemStorage::new();
+    odd.put("TIJORI/objects/ab/whatever.tjo", vec![1]);
+    let err = backup(&src, &words, &odd, false).unwrap_err();
+    assert!(matches!(err, Error::Diverged(_)), "{err}");
+
+    // A copy in use by another writer.
+    let busy = MemStorage::new();
+    busy.put("TIJORI/.lock", b"held".to_vec());
+    assert_eq!(
+        backup(&src, &words, &busy, false).unwrap_err().class(),
+        ErrorClass::Locked
+    );
+}
+
+#[test]
+fn backup_never_copies_a_damaged_object() {
+    let (src, words, _, cur) = populated();
+    let dest = MemStorage::new();
+    backup(&src, &words, &dest, false).unwrap();
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    v.write_bytes(&p("/fresh.bin"), &pattern(5000, 9), meta())
+        .unwrap();
+    v.lock().unwrap();
+    // Damage the one object the copy does not have yet.
+    let new_obj = object_files(&src)
+        .into_iter()
+        .find(|f| dest.get(f).is_none() && src.get(f).unwrap().len() > 5000)
+        .unwrap();
+    let mut data = src.get(&new_obj).unwrap();
+    data[100] ^= 1;
+    src.put(&new_obj, data);
+    let err = backup(&src, &words, &dest, false).unwrap_err();
+    assert_eq!(err.class(), ErrorClass::Tampered, "{err}");
+    let mut b = unlock_with(&dest, &recovery(&words), OpenMode::ReadOnly).unwrap();
+    assert_eq!(
+        snapshot(&mut b).unwrap(),
+        cur,
+        "the copy keeps its old state"
+    );
+}
+
+#[test]
+fn interrupted_backup_leaves_old_or_new_copy() {
+    let (src, words, _, old) = populated();
+    let base = MemStorage::new();
+    backup(&src, &words, &base, false).unwrap();
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    change_set(&mut v).unwrap();
+    let new = snapshot(&mut v).unwrap();
+    v.lock().unwrap();
+
+    let dry = base.reboot();
+    dry.crash_at(usize::MAX, Fault::Fail);
+    backup(&src, &words, &dry, false).unwrap();
+    let total = dry.ops();
+    assert!(total > 5, "{total} writes");
+    for fault in [Fault::Fail, Fault::Tear, Fault::Delete] {
+        for n in 0..total {
+            let d = base.reboot();
+            d.crash_at(n, fault);
+            assert!(backup(&src, &words, &d, false).is_err(), "{fault:?} at {n}");
+            let after = d.reboot();
+            let mut b = unlock_with(&after, &recovery(&words), OpenMode::ReadOnly)
+                .unwrap_or_else(|e| panic!("{fault:?} at write {n}: copy does not open: {e}"));
+            let snap = snapshot(&mut b).unwrap_or_else(|e| panic!("{fault:?} at {n}: {e}"));
+            assert!(snap == old || snap == new, "{fault:?} at write {n}");
+            drop(b);
+            // Running the backup again always finishes the job.
+            after.delete("TIJORI/.lock");
+            backup(&src, &words, &after, false).unwrap();
+            let mut b = unlock_with(&after, &recovery(&words), OpenMode::ReadOnly).unwrap();
+            assert_eq!(snapshot(&mut b).unwrap(), new, "{fault:?} at {n}, rerun");
+        }
+    }
+}
+
+#[test]
+fn interrupted_backup_after_rekey_opens_with_old_or_new_secret() {
+    let (src, words, prev, cur) = populated();
+    let base = MemStorage::new();
+    backup(&src, &words, &base, false).unwrap();
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    let slots = vec![NewSlot::Password {
+        password: Password::new(OTHER),
+        keyfile: None,
+        argon: ArgonChoice::minimum(),
+    }];
+    v.rekey(slots, &mut |_| true).unwrap();
+    v.lock().unwrap();
+    let copy = |dest: &MemStorage| -> Result<(), Error> {
+        let mut v = unlock_with(&src, &UnlockSecret::password(OTHER), OpenMode::ReadOnly)?;
+        v.backup_to(
+            Arc::new(dest.clone()),
+            BackupOptions::default(),
+            &mut |_| true,
+        )?;
+        Ok(())
+    };
+    let dry = base.reboot();
+    dry.crash_at(usize::MAX, Fault::Fail);
+    copy(&dry).unwrap();
+    let total = dry.ops();
+    for fault in [Fault::Fail, Fault::Tear, Fault::Delete] {
+        for n in 0..total {
+            let d = base.reboot();
+            d.crash_at(n, fault);
+            assert!(copy(&d).is_err());
+            let after = d.reboot();
+            let opened = unlock_with(&after, &recovery(&words), OpenMode::ReadOnly).or_else(|_| {
+                unlock_with(&after, &UnlockSecret::password(OTHER), OpenMode::ReadOnly)
+            });
+            let mut b = opened.unwrap_or_else(|e| panic!("{fault:?} at {n}: {e}"));
+            // The copy's slots do not open under the new keys, so the
+            // backup cannot tell which one is newest; it may fall back to
+            // the copy's previous revision, which is still a whole state.
+            let snap = snapshot(&mut b).unwrap();
+            assert!(snap == cur || snap == prev, "{fault:?} at {n}");
+            drop(b);
+            after.delete("TIJORI/.lock");
+            copy(&after).unwrap();
+            let mut b =
+                unlock_with(&after, &UnlockSecret::password(OTHER), OpenMode::ReadOnly).unwrap();
+            assert_eq!(snapshot(&mut b).unwrap(), cur, "{fault:?} at {n}, rerun");
+        }
+    }
+}
+
+#[test]
+fn cancelled_backup_keeps_the_old_copy() {
+    let (src, words, _, old) = populated();
+    let dest = MemStorage::new();
+    backup(&src, &words, &dest, false).unwrap();
+    let mut v = unlock_with(&src, &recovery(&words), OpenMode::ReadWrite).unwrap();
+    change_set(&mut v).unwrap();
+    let err = v
+        .backup_to(
+            Arc::new(dest.clone()),
+            BackupOptions::default(),
+            &mut |_| false,
+        )
+        .unwrap_err();
+    assert!(matches!(err, Error::Cancelled));
+    v.lock().unwrap();
+    let mut b = unlock_with(&dest, &recovery(&words), OpenMode::ReadOnly).unwrap();
+    assert_eq!(snapshot(&mut b).unwrap(), old);
+    assert!(dest.get("TIJORI/.lock").is_none());
 }
 
 #[test]

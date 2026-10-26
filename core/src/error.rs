@@ -105,6 +105,9 @@ pub enum Error {
     ReadOnly(String),
     #[error("cancelled")]
     Cancelled,
+    /// A backup has changes the vault being copied does not have.
+    #[error("{0}")]
+    Diverged(String),
     #[error("{0}")]
     Other(String),
 }
