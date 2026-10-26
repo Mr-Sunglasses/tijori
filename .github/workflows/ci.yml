@@ -44,6 +44,25 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace --all-features --locked
 
+  e2e:
+    name: e2e (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install pinned toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - name: Install exFAT tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y exfatprogs
+      - run: cargo build -p tijori-cli --locked
+      - name: CLI on a real exFAT volume (loop image on Linux, hdiutil image on macOS)
+        run: scripts/e2e.sh target/debug/tijori
+
   vectors:
     name: vectors
     runs-on: ubuntu-latest
