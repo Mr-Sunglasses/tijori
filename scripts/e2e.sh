@@ -71,7 +71,7 @@ printf 'unicode\n' >"$SRC/café ✓.txt"
 
 step "init"
 printf '%s\nI UNDERSTAND\n' "$PW" | "$TIJORI" init "$MNT" --label E2E --password-stdin >"$WORK/init.txt"
-grep -q "If you lose both your password and this recovery phrase" "$WORK/init.txt" || fail "no warning"
+grep >/dev/null "If you lose both your password and this recovery phrase" "$WORK/init.txt" || fail "no warning"
 PHRASE=$(grep -Eo '[0-9]+\. [a-z]+' "$WORK/init.txt" | awk '{print $2}' | paste -sd' ' -)
 [ "$(echo "$PHRASE" | wc -w | tr -d ' ')" = 24 ] || fail "recovery phrase not shown"
 [ -f "$MNT/README-TIJORI.txt" ] || fail "no README"
@@ -92,15 +92,15 @@ step "folder commands"
 t mkdir -p /archive/old
 t mv /files/hello.txt /archive/old
 t rm -r /files/photos
-t ls /archive/old | grep -qx hello.txt || fail "mv"
+t ls /archive/old | grep -x hello.txt >/dev/null || fail "mv"
 expect_exit 1 "$PW" rm /archive
-t ls /files | grep -q photos && fail "rm -r"
+t ls /files | grep >/dev/null photos && fail "rm -r"
 
 step "settings, info, keyslots, password"
 t settings --label "E2E renamed" --padding off
-t info | grep -q "E2E renamed" || fail "label"
+t info | grep >/dev/null "E2E renamed" || fail "label"
 printf '%s\n%s\n' "$PW" "$PW2" | "$TIJORI" --vault "$MNT" --password-stdin keyslot add
-t keyslot list | grep -c password | grep -qx 2 || fail "keyslot add"
+t keyslot list | grep -c password | grep -x 2 >/dev/null || fail "keyslot add"
 t keyslot remove 2
 printf '%s\n%s\n' "$PW" "$PW2" | "$TIJORI" --vault "$MNT" --password-stdin passwd
 expect_exit 2 "$PW" ls
@@ -114,7 +114,7 @@ t gc
 
 step "shell"
 printf '%s\nmkdir /shell\nput %s /shell\nls /shell\nexit\n' "$PW" "$SRC/empty.txt" \
-  | "$TIJORI" --vault "$MNT" --password-stdin shell | grep -qx empty.txt || fail "shell"
+  | "$TIJORI" --vault "$MNT" --password-stdin shell | grep -x empty.txt >/dev/null || fail "shell"
 
 step "unplug and replug"
 unmount_image
