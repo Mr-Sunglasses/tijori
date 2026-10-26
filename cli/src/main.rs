@@ -71,6 +71,18 @@ enum Command {
         /// The drive (or use --vault).
         drive: Option<PathBuf>,
     },
+    /// Show the vault as a folder in Finder or your file manager until you
+    /// press Ctrl+C, eject it, or leave it idle.
+    Mount {
+        /// The drive (or use --vault).
+        drive: Option<PathBuf>,
+        /// Where to mount (default: /Volumes/<label> on macOS,
+        /// $XDG_RUNTIME_DIR/tijori/<label> on Linux).
+        mountpoint: Option<PathBuf>,
+        /// Lock after this many idle minutes; 0 never locks for idleness.
+        #[arg(long, default_value_t = 15)]
+        idle_minutes: u64,
+    },
     /// Remove a lock left behind by a Tijori that is no longer running.
     BreakLock {
         /// Break the lock even if it was refreshed in the last 10 minutes.
@@ -191,6 +203,22 @@ fn main() -> ExitCode {
                 ..cli.global.clone()
             };
             commands::shell(&global, &mut input)
+        }
+        Command::Mount {
+            drive,
+            mountpoint,
+            idle_minutes,
+        } => {
+            // With --vault naming the drive, a lone argument is the mount point.
+            let (drive, mountpoint) = match (&cli.global.vault, drive, mountpoint) {
+                (Some(_), Some(only), None) => (None, Some(only)),
+                (_, d, m) => (d, m),
+            };
+            let global = GlobalArgs {
+                vault: drive.or(cli.global.vault.clone()),
+                ..cli.global.clone()
+            };
+            commands::mount(&global, &mut input, mountpoint, idle_minutes)
         }
         Command::BreakLock { force } => commands::break_lock(&cli.global, &mut input, force),
         Command::Vault(cmd) => commands::run_once(&cli.global, &mut input, cmd),

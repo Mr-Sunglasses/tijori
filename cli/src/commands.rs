@@ -197,6 +197,49 @@ pub fn shell(global: &GlobalArgs, input: &mut Input) -> Result<()> {
     }
 }
 
+pub fn mount(
+    global: &GlobalArgs,
+    input: &mut Input,
+    mountpoint: Option<PathBuf>,
+    idle_minutes: u64,
+) -> Result<()> {
+    tijori_mount::available().map_err(CliError::other)?;
+    let s = match session::open(global, input, OpenMode::ReadWrite) {
+        Ok(s) => s,
+        Err(CliError::Locked(msg)) => {
+            eprintln!("Mounting read-only: {msg}");
+            session::open(global, input, OpenMode::ReadOnly)?
+        }
+        Err(e) => return Err(e),
+    };
+    let Session { vault, drive, .. } = s;
+    let opts = tijori_mount::MountOptions {
+        mountpoint,
+        idle_timeout: (idle_minutes > 0).then(|| std::time::Duration::from_secs(idle_minutes * 60)),
+    };
+    let m = tijori_mount::mount(vault, &drive, opts)?;
+    for w in m.warnings() {
+        eprintln!("Warning: {w}");
+    }
+    let stopper = m.stopper();
+    ctrlc::set_handler(move || stopper.request_unmount())
+        .map_err(|e| CliError::other(format!("cannot handle Ctrl+C: {e}")))?;
+    out!(
+        "Mounted at {}{}. Press Ctrl+C (or eject the volume) to lock.",
+        m.mountpoint().display(),
+        if m.is_read_only() { " (read-only)" } else { "" }
+    );
+    let reason = m.wait()?;
+    let why = match reason {
+        tijori_mount::UnmountReason::Requested => "on request",
+        tijori_mount::UnmountReason::External => "because the volume was ejected",
+        tijori_mount::UnmountReason::DriveRemoved => "because the drive was removed",
+        tijori_mount::UnmountReason::IdleTimeout => "after being idle",
+    };
+    out!("Unmounted {why}; the vault is locked.");
+    Ok(())
+}
+
 pub fn break_lock(global: &GlobalArgs, input: &mut Input, force: bool) -> Result<()> {
     let drive = crate::drive::resolve(global.vault.as_deref())?;
     let storage = StdFsStorage::new(&drive);

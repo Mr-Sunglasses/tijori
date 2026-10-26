@@ -13,10 +13,12 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.6", features = ["derive", "wrap_help"] }
+ctrlc = { version = "3", features = ["termination"] }
 indicatif = "0.18"
 rpassword = "7.5"
 shlex = "2.0"
 tijori-core = { path = "../core", features = ["host"] }
+tijori-mount = { version = "0.0.0", path = "../mount" }
 zeroize = "1.9"
 
 [dev-dependencies]

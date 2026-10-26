@@ -14,6 +14,8 @@ Usage: tijori [OPTIONS] <COMMAND>
 Commands:
   init        Create a vault on a drive
   shell       Unlock once and run several commands; lock on exit
+  mount       Show the vault as a folder in Finder or your file manager until you press Ctrl+C,
+              eject it, or leave it idle
   break-lock  Remove a lock left behind by a Tijori that is no longer running
   ls          List a folder
   put         Add files and folders (recursively) to a vault folder
