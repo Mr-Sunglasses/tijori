@@ -1,0 +1,48 @@
+[package]
+name = "tijori-fuzz"
+version = "0.0.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+tijori-core = { path = "../core" }
+
+# Not part of the main workspace: cargo-fuzz needs nightly.
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "header"
+path = "fuzz_targets/header.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "root_pointer"
+path = "fuzz_targets/root_pointer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "dir_cbor"
+path = "fuzz_targets/dir_cbor.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "object_stream"
+path = "fuzz_targets/object_stream.rs"
+test = false
+doc = false
+bench = false
