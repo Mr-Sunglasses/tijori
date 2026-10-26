@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = ["core", "cli", "mount", "ffi", "desktop/src-tauri"]
+exclude = ["fuzz"]
 
 [workspace.package]
 version = "0.0.0"
@@ -15,3 +16,7 @@ unsafe_op_in_unsafe_fn = "deny"
 # Plan §0 rule 5: any `unsafe` outside core/ needs a `// SAFETY:` comment.
 undocumented_unsafe_blocks = "deny"
 dbg_macro = "deny"
+
+# Argon2id is unusably slow unoptimized; tests run it many times.
+[profile.dev.package.dryoc]
+opt-level = 3

@@ -8,3 +8,6 @@
 //! disagree, the code is wrong.
 
 #![forbid(unsafe_code)]
+
+pub mod crypto;
+pub mod error;
