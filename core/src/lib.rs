@@ -10,6 +10,7 @@
 #![forbid(unsafe_code)]
 
 pub mod crypto error format keys names padding recovery strength;
+pub mod rollback;
 pub mod storage;
 
 pub use error::{Error, ErrorClass, Result, StorageError};
