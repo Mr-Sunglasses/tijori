@@ -368,3 +368,48 @@ fn unlock_with_recovery_phrase() {
         )
     );
 }
+
+#[test]
+fn backup_and_restore() {
+    let e = Env::new();
+    e.init();
+    e.vault(&["put", &e.path("src/hello.txt"), "/docs"], &pw());
+    let backup = e.path("backup");
+    snap!("backup", e.vault(&["backup", &backup], &pw()));
+    snap!("backup_again", e.vault(&["backup", &backup], &pw()));
+    let ls = e.run(
+        &["--vault", &backup, "--password-stdin", "ls", "/docs"],
+        &pw(),
+    );
+    assert!(ls.contains("hello.txt"), "{ls}");
+
+    // Someone deletes the vault from the drive; the backup brings it back.
+    fs::remove_dir_all(e.drive().join("TIJORI")).unwrap();
+    fs::remove_file(e.drive().join("README-TIJORI.txt")).unwrap();
+    let drive = e.drive().to_string_lossy().into_owned();
+    snap!(
+        "restore",
+        e.run(&["--password-stdin", "restore", &backup, &drive], &pw())
+    );
+    let cat = e.vault(&["cat", "/docs/hello.txt"], &pw());
+    assert!(cat.contains("hello tijori"), "{cat}");
+    assert!(e.drive().join("README-TIJORI.txt").is_file());
+
+    // A change made only in the backup is not overwritten by accident.
+    e.run(
+        &[
+            "--vault",
+            &backup,
+            "--password-stdin",
+            "mkdir",
+            "/only-in-backup",
+        ],
+        &pw(),
+    );
+    snap!("backup_diverged", e.vault(&["backup", &backup], &pw()));
+    let forced = e.vault(&["backup", "--force", &backup], &pw());
+    assert!(forced.starts_with("exit: 0"), "{forced}");
+
+    let zsh = e.run(&["completions", "zsh"], "");
+    assert!(zsh.starts_with("exit: 0") && zsh.contains("#compdef tijori"));
+}

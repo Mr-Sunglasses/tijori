@@ -144,6 +144,19 @@ cp "$WORK/obj.bak" "$OBJ"
 [ "$CODE" = 0 ] || [ "$CODE" = 3 ] || fail "tampering gave exit $CODE"
 t verify >/dev/null
 
+step "backup and restore"
+t backup "$WORK/backup"
+t backup "$WORK/backup" | grep >/dev/null "nothing new to copy" || fail "second backup copied again"
+echo "$PW" | "$TIJORI" --vault "$WORK/backup" --password-stdin verify >/dev/null || fail "backup does not verify"
+# Someone deletes the vault from the drive.
+rm -rf "$MNT/TIJORI" "$MNT/README-TIJORI.txt" "$MNT/._README-TIJORI.txt"
+echo "$PW" | "$TIJORI" --password-stdin restore "$WORK/backup" "$MNT"
+t verify >/dev/null
+rm -rf "$OUT" && mkdir -p "$OUT"
+t get /archive "$OUT"
+[ "$(cat "$OUT/archive/old/hello.txt")" = "hello from tijori" ] || fail "content after restore"
+[ -z "$(find "$MNT/TIJORI" -name '._*')" ] || fail "AppleDouble files left in the restored vault"
+
 step "timestamps"
 case "$(uname)" in
   Darwin) YEAR=$(stat -f %Sm -t %Y "$MNT/TIJORI/vault.header") ;;

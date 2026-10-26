@@ -1,0 +1,8 @@
+---
+source: cli/tests/cli.rs
+expression: "e.run(&[\"--password-stdin\", \"restore\", &backup, &drive], &pw())"
+---
+exit: 0
+--- stdout
+Restored revision 2 onto [TMP]/drive: 4 objects copied (420 B).
+--- stderr

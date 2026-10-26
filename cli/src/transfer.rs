@@ -9,7 +9,7 @@ use indicatif::ProgressBar;
 use tijori_core::{EntryKind, Error, FileMeta, Vault, VaultPath};
 
 use crate::error::{CliError, Result};
-use crate::output;
+use crate::{cancel, output};
 
 #[derive(Default)]
 pub struct Totals {
@@ -102,7 +102,7 @@ fn put_one(
         let (bar, base) = (batch.bar.clone(), batch.base);
         vault.import_with_progress(&mut f, &dest, len, file_meta, &mut |p| {
             bar.set_position(base + p.done);
-            true
+            !cancel::requested()
         })?;
         batch.base += len;
         t.files += 1;
@@ -118,6 +118,7 @@ fn put_one(
 pub fn put(vault: &mut Vault, sources: &[PathBuf], dest_dir: &VaultPath) -> Result<Totals> {
     vault.mkdir_all(dest_dir)?;
     let total: u64 = sources.iter().map(|s| local_size(s)).sum();
+    let _busy = cancel::busy();
     let mut batch = Batch {
         bar: output::byte_bar(total, "Encrypting"),
         base: 0,
@@ -127,7 +128,18 @@ pub fn put(vault: &mut Vault, sources: &[PathBuf], dest_dir: &VaultPath) -> Resu
         if fs::symlink_metadata(src).is_err() {
             return Err(CliError::other(format!("{} does not exist", src.display())));
         }
-        put_one(vault, src, dest_dir, &mut t, &mut batch)?;
+        if let Err(e) = put_one(vault, src, dest_dir, &mut t, &mut batch) {
+            batch.bar.finish_and_clear();
+            if matches!(e, CliError::Core(Error::Cancelled)) {
+                vault.commit()?;
+                return Err(CliError::other(match t.files {
+                    0 => "cancelled; no files were added".to_string(),
+                    1 => "cancelled; the 1 file added before that is kept".to_string(),
+                    n => format!("cancelled; the {n} files added before that are kept"),
+                }));
+            }
+            return Err(e);
+        }
     }
     batch.bar.finish_and_clear();
     vault.commit()?;
@@ -175,6 +187,9 @@ fn export_file(
                 .map_err(|e| Error::from_io(e, "reading from the vault"))?;
             if n == 0 {
                 break;
+            }
+            if cancel::requested() {
+                return Err(Error::Cancelled.into());
             }
             out.write_all(&buf[..n])?;
             n_total += n as u64;
@@ -276,10 +291,19 @@ pub fn get(vault: &mut Vault, sources: &[VaultPath], local_dir: &Path) -> Result
         )));
     }
     let total: u64 = sources.iter().map(|s| vault_size(vault, s)).sum();
+    let _busy = cancel::busy();
     let bar = output::byte_bar(total, "Decrypting");
     let mut t = Totals::default();
     for src in sources {
-        get_one(vault, src, local_dir, &mut t, &bar)?;
+        if let Err(e) = get_one(vault, src, local_dir, &mut t, &bar) {
+            bar.finish_and_clear();
+            if matches!(e, CliError::Core(Error::Cancelled)) {
+                return Err(CliError::other(
+                    "cancelled; files copied before that are kept, the unfinished one was removed",
+                ));
+            }
+            return Err(e);
+        }
     }
     bar.finish_and_clear();
     Ok(t)

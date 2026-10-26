@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"backup\", &backup], &pw())"
+---
+exit: 1
+--- stdout
+--- stderr
+Note: [TMP]/backup is on the same drive as the vault, so this copy will not survive losing the drive.
+tijori: the destination has changes this vault does not have (revision 3 there, 2 here); copying would lose them. To overwrite it anyway, run again with --force.

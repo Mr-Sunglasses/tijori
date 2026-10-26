@@ -8,16 +8,16 @@ use clap::Parser;
 use tijori_core::format::SlotKind;
 use tijori_core::storage::StdFsStorage;
 use tijori_core::vault::{
-    CreateOptions, NewSlot, PASSWORD_CHANGE_NOTE, ReadOnlyReason, break_lock as core_break_lock,
-    read_lock,
+    BackupOptions, CreateOptions, NewSlot, PASSWORD_CHANGE_NOTE, ReadOnlyReason,
+    break_lock as core_break_lock, read_lock,
 };
-use tijori_core::{EntryKind, OpenMode, Vault, VaultPath};
+use tijori_core::{EntryKind, Error, OpenMode, Vault, VaultPath};
 
 use crate::error::{CliError, Result};
 use crate::output::{self, print_recovery_phrase};
 use crate::prompt::Input;
 use crate::session::{self, Session, argon_choice, open_keyfile};
-use crate::{GlobalArgs, KeyslotAction, VaultCommand, transfer};
+use crate::{GlobalArgs, KeyslotAction, VaultCommand, cancel, transfer};
 
 const UNDERSTAND: &str = "I UNDERSTAND";
 
@@ -100,6 +100,7 @@ impl VaultCommand {
             | VaultCommand::Get { .. }
             | VaultCommand::Cat { .. }
             | VaultCommand::Verify
+            | VaultCommand::Backup { .. }
             | VaultCommand::Info => false,
             VaultCommand::Keyslot {
                 action: KeyslotAction::List,
@@ -237,6 +238,105 @@ pub fn mount(
         tijori_mount::UnmountReason::IdleTimeout => "after being idle",
     };
     out!("Unmounted {why}; the vault is locked.");
+    Ok(())
+}
+
+pub fn restore(global: &GlobalArgs, input: &mut Input, drive: &Path, force: bool) -> Result<()> {
+    if !drive.is_dir() {
+        return Err(CliError::other(format!(
+            "{} is not a folder or mounted drive",
+            drive.display()
+        )));
+    }
+    let mut s = session::open(global, input, OpenMode::ReadOnly)?;
+    let result = copy_vault(&mut s.vault, &s.drive, drive, force, true);
+    let locked = s.vault.lock();
+    result?;
+    Ok(locked?)
+}
+
+/// The device a path lives on, to warn about backups on the same drive.
+#[cfg(unix)]
+fn device(path: &Path) -> Option<u64> {
+    use std::os::unix::fs::MetadataExt;
+    std::fs::metadata(path).ok().map(|m| m.dev())
+}
+
+#[cfg(not(unix))]
+fn device(_: &Path) -> Option<u64> {
+    None
+}
+
+/// `backup` and `restore`: make `dest` an exact copy of the open vault.
+fn copy_vault(v: &mut Vault, from: &Path, dest: &Path, force: bool, restoring: bool) -> Result<()> {
+    // Accept the TIJORI folder itself as well as the folder holding it.
+    let dest = match dest.file_name() {
+        Some(n) if n == "TIJORI" => dest.parent().unwrap_or(dest),
+        _ => dest,
+    };
+    std::fs::create_dir_all(dest)
+        .map_err(|e| CliError::other(format!("cannot create {}: {e}", dest.display())))?;
+    let same = |a: &Path, b: &Path| match (a.canonicalize(), b.canonicalize()) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    };
+    if same(from, dest) {
+        return Err(CliError::other(
+            "that is where the vault already is; choose another folder or drive",
+        ));
+    }
+    if !restoring && device(from).is_some() && device(from) == device(dest) {
+        eprintln!(
+            "Note: {} is on the same drive as the vault, so this copy will not survive losing the drive.",
+            dest.display()
+        );
+    }
+    let _busy = cancel::busy();
+    let bar = output::byte_bar(0, if restoring { "Restoring" } else { "Backing up" });
+    let result = v.backup_to(
+        Arc::new(StdFsStorage::new(dest)),
+        BackupOptions { force },
+        &mut |p| {
+            bar.set_length(p.total);
+            bar.set_position(p.done);
+            !cancel::requested()
+        },
+    );
+    bar.finish_and_clear();
+    let r = result.map_err(|e| match e {
+        Error::Diverged(m) => {
+            CliError::other(format!("{m}. To overwrite it anyway, run again with --force."))
+        }
+        Error::Cancelled => CliError::other(
+            "cancelled; the copy still opens at the state it had before (run the command again to finish)",
+        ),
+        e => e.into(),
+    })?;
+    let what = if r.copied == 0 {
+        "nothing new to copy".to_string()
+    } else {
+        format!(
+            "{} object{} copied ({})",
+            r.copied,
+            if r.copied == 1 { "" } else { "s" },
+            output::size(r.copied_bytes)
+        )
+    };
+    let mut details = vec![what];
+    if r.unchanged > 0 {
+        details.push(format!("{} already there", r.unchanged));
+    }
+    if r.removed > 0 {
+        details.push(format!("{} no longer needed and removed", r.removed));
+    }
+    out!(
+        "{} revision {} {} {}: {}.",
+        if restoring { "Restored" } else { "Backed up" },
+        r.rev,
+        if restoring { "onto" } else { "to" },
+        dest.display(),
+        details.join(", ")
+    );
     Ok(())
 }
 
@@ -494,11 +594,12 @@ fn execute(
                 },
                 NewSlot::Recovery,
             ];
+            let _busy = cancel::busy();
             let bar = output::byte_bar(0, "Re-encrypting");
             let phrase = v.rekey(slots, &mut |p| {
                 bar.set_length(p.total);
                 bar.set_position(p.done);
-                true
+                !cancel::requested()
             })?;
             bar.finish_and_clear();
             out!("Re-keyed: revision {}.", v.rev());
@@ -507,11 +608,12 @@ fn execute(
             }
         }
         VaultCommand::Verify => {
+            let _busy = cancel::busy();
             let bar = output::byte_bar(0, "Verifying");
             let report = v.verify(&mut |p| {
                 bar.set_length(p.total);
                 bar.set_position(p.done);
-                true
+                !cancel::requested()
             })?;
             bar.finish_and_clear();
             out!(
@@ -566,6 +668,7 @@ fn execute(
                 r.kept
             );
         }
+        VaultCommand::Backup { dest, force } => copy_vault(v, &s.drive, &dest, force, false)?,
         VaultCommand::Info => {
             let (major, minor) = v.format_version();
             out!("Drive:        {}", s.drive.display());

@@ -2,6 +2,7 @@
 
 #[macro_use]
 mod output;
+mod cancel;
 mod commands;
 mod drive;
 mod error;
@@ -83,14 +84,32 @@ enum Command {
         #[arg(long, default_value_t = 15)]
         idle_minutes: u64,
     },
+    #[command(flatten)]
+    Vault(VaultCommand),
+    /// Copy a backup onto a drive, so the drive holds the backup's state.
+    /// Only what differs is copied.
+    Restore {
+        /// The backup: a folder or drive made with `tijori backup`.
+        backup: PathBuf,
+        /// The drive to restore onto (an exFAT volume).
+        drive: PathBuf,
+        /// Overwrite the drive's vault even if it has changes the backup
+        /// does not have.
+        #[arg(long)]
+        force: bool,
+    },
+    /// Print a completion script for your shell, for example
+    /// `tijori completions zsh > ~/.zfunc/_tijori`.
+    Completions {
+        /// Your shell.
+        shell: clap_complete::Shell,
+    },
     /// Remove a lock left behind by a Tijori that is no longer running.
     BreakLock {
         /// Break the lock even if it was refreshed in the last 10 minutes.
         #[arg(long)]
         force: bool,
     },
-    #[command(flatten)]
-    Vault(VaultCommand),
 }
 
 /// Commands that work on an unlocked vault, also available in `tijori shell`.
@@ -120,22 +139,32 @@ pub enum VaultCommand {
     },
     /// Create a folder.
     Mkdir {
+        /// The new folder, for example /photos/2026.
         path: String,
         /// Create missing parent folders too.
         #[arg(short = 'p')]
         parents: bool,
     },
     /// Move or rename a file or folder.
-    Mv { from: String, to: String },
+    Mv {
+        /// What to move.
+        from: String,
+        /// The new path, or an existing folder to move it into.
+        to: String,
+    },
     /// Delete a file, or a folder with -r.
     Rm {
+        /// The file or folder to delete.
         path: String,
         /// Delete a folder and everything in it.
         #[arg(short = 'r')]
         recursive: bool,
     },
     /// Print a file to standard output.
-    Cat { path: String },
+    Cat {
+        /// The file to print.
+        path: String,
+    },
     /// Change the password of a password slot.
     Passwd {
         /// Keyslot to change (default: the one you unlocked with, or the first password slot).
@@ -154,6 +183,15 @@ pub enum VaultCommand {
     Verify,
     /// Delete encrypted objects nothing refers to any more.
     Gc,
+    /// Copy the whole vault, still encrypted, to another folder or drive.
+    /// Run it again to bring the copy up to date; only changes are copied.
+    Backup {
+        /// Folder or drive to hold the copy (created if missing).
+        dest: PathBuf,
+        /// Overwrite a copy that has changes this vault does not have.
+        #[arg(long)]
+        force: bool,
+    },
     /// Show format version, settings, keyslots and revision.
     Info,
     /// Show or change vault settings.
@@ -184,7 +222,10 @@ pub enum KeyslotAction {
         recovery: bool,
     },
     /// Remove a keyslot. The last one can never be removed.
-    Remove { index: usize },
+    Remove {
+        /// The slot number, as `keyslot list` shows it.
+        index: usize,
+    },
 }
 
 fn main() -> ExitCode {
@@ -219,6 +260,26 @@ fn main() -> ExitCode {
                 ..cli.global.clone()
             };
             commands::mount(&global, &mut input, mountpoint, idle_minutes)
+        }
+        Command::Restore {
+            backup,
+            drive,
+            force,
+        } => {
+            let global = GlobalArgs {
+                vault: Some(backup),
+                ..cli.global.clone()
+            };
+            commands::restore(&global, &mut input, &drive, force)
+        }
+        Command::Completions { shell } => {
+            clap_complete::generate(
+                shell,
+                &mut <Cli as clap::CommandFactory>::command(),
+                "tijori",
+                &mut std::io::stdout(),
+            );
+            Ok(())
         }
         Command::BreakLock { force } => commands::break_lock(&cli.global, &mut input, force),
         Command::Vault(cmd) => commands::run_once(&cli.global, &mut input, cmd),

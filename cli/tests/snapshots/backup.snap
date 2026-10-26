@@ -1,0 +1,9 @@
+---
+source: cli/tests/cli.rs
+expression: "e.vault(&[\"backup\", &backup], &pw())"
+---
+exit: 0
+--- stdout
+Backed up revision 2 to [TMP]/backup: 4 objects copied (420 B).
+--- stderr
+Note: [TMP]/backup is on the same drive as the vault, so this copy will not survive losing the drive.
