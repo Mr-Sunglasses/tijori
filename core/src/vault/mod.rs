@@ -152,6 +152,26 @@ impl Vault {
         self.root.rev
     }
 
+    /// `(format_major, format_minor)` from the header.
+    pub fn format_version(&self) -> (u16, u16) {
+        (self.header.format_major, self.header.format_minor)
+    }
+
+    /// Unix seconds of the last commit.
+    pub fn last_written(&self) -> u64 {
+        self.root.written_at
+    }
+
+    /// The device that made the last commit.
+    pub fn last_writer_id(&self) -> [u8; 16] {
+        self.root.writer_id
+    }
+
+    /// This session's device ID.
+    pub fn writer_id(&self) -> [u8; 16] {
+        self.writer_id
+    }
+
     pub fn is_writable(&self) -> bool {
         self.lock.is_some()
     }
