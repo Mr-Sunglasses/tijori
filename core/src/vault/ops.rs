@@ -315,6 +315,38 @@ impl Vault {
         Ok(())
     }
 
+    /// Changes a file's or folder's modification time and, for files, the
+    /// executable bit. Stored at the next commit.
+    pub fn set_meta(
+        &mut self,
+        path: &VaultPath,
+        mtime_ms: Option<i64>,
+        executable: Option<bool>,
+    ) -> Result<()> {
+        self.require_writable()?;
+        let (parent, name) = Self::split(path)?;
+        let name = name.to_string();
+        let mut entry = self
+            .node(&parent, false)?
+            .dir
+            .get(&name)
+            .cloned()
+            .ok_or_else(|| Error::NotFound(path.to_string()))?;
+        let before = entry.clone();
+        if let Some(m) = mtime_ms {
+            entry.mtime = m;
+        }
+        if let Some(x) = executable
+            && !entry.is_dir()
+        {
+            entry.mode = x.then_some(MODE_EXECUTABLE);
+        }
+        if entry != before {
+            self.node(&parent, true)?.dir.upsert(entry)?;
+        }
+        Ok(())
+    }
+
     /// Changes settings; they are stored at the next commit.
     pub fn set_settings(&mut self, settings: Settings) -> Result<()> {
         self.require_writable()?;

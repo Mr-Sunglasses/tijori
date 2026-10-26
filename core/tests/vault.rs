@@ -226,6 +226,10 @@ fn folder_operations() {
     .map(|(k, v)| (k.to_string(), v))
     .collect();
     assert_eq!(snap, expected);
+    v.set_meta(&p("/y"), Some(42), Some(true)).unwrap();
+    v.commit().unwrap();
+    let y = v.stat(&p("/y")).unwrap();
+    assert_eq!((y.mtime_ms, y.executable), (42, true));
     v.remove(&p("/A"), true).unwrap();
     v.commit().unwrap();
     assert_eq!(v.list(&VaultPath::root()).unwrap().len(), 1);

@@ -134,7 +134,7 @@ impl Error {
         Error::Unsupported(what.to_string())
     }
 
-    pub(crate) fn invalid(what: impl fmt::Display) -> Self {
+    pub fn invalid(what: impl fmt::Display) -> Self {
         Error::InvalidInput(what.to_string())
     }
 
