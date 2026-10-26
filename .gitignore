@@ -31,4 +31,4 @@ __pycache__/
 # Documentation site (mkdocs)
 /site/
 /.cache/
-.venv-docs/
+/.venv/

@@ -1,0 +1,15 @@
+# Tools to build the documentation site with uv (not needed to build Tijori).
+#   uv run mkdocs serve
+[project]
+name = "tijori-docs"
+version = "0"
+description = "Builds the Tijori documentation site."
+requires-python = ">=3.12"
+dependencies = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.8.0",
+    "pymdown-extensions==12.3",
+]
+
+[tool.uv]
+package = false

@@ -86,12 +86,12 @@ for five minutes every night.
 ## This documentation
 
 ```console
-$ python3 -m venv .venv-docs
-$ .venv-docs/bin/pip install -r docs/requirements.txt
-$ .venv-docs/bin/mkdocs serve
+$ uv run mkdocs serve
 ```
 
-Then open <http://127.0.0.1:8000>. `mkdocs build --strict` is what CI runs.
+Then open <http://127.0.0.1:8000>. The tools are pinned in `pyproject.toml`
+and `uv.lock`; [uv](https://docs.astral.sh/uv/) installs them into `.venv`
+on first run. `uv run mkdocs build --strict` is what CI runs.
 
 ## Rules for every change
 

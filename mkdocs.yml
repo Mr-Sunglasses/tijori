@@ -7,8 +7,6 @@ edit_uri: edit/main/docs/
 copyright: Free and open source. Apache-2.0 and GPL-3.0-or-later.
 
 docs_dir: docs
-exclude_docs: |
-  requirements.txt
 
 theme:
   name: material

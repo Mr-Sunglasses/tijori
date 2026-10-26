@@ -59,9 +59,7 @@ The user guide, command reference and security notes live in [`docs/`](docs/)
 and build into a website with [MkDocs](https://www.mkdocs.org):
 
 ```sh
-python3 -m venv .venv-docs
-.venv-docs/bin/pip install -r docs/requirements.txt
-.venv-docs/bin/mkdocs serve      # then open http://127.0.0.1:8000
+uv run mkdocs serve      # needs uv; then open http://127.0.0.1:8000
 ```
 
 Start with [Where your files go](docs/guide/how-it-works.md) and

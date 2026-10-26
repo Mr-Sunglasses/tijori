@@ -94,12 +94,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
-      - run: pip install -r docs/requirements.txt
+      - uses: astral-sh/setup-uv@v10.2.0
       - name: Build the documentation site
-        run: mkdocs build --strict
+        run: uv run --locked mkdocs build --strict
         env:
           NO_MKDOCS_2_WARNING: "1"
       - name: No em or en dashes in the documentation
