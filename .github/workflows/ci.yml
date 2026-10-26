@@ -58,7 +58,14 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Install exFAT tools
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y exfatprogs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y exfatprogs
+          # The runner's cloud kernel ships the exfat driver in modules-extra.
+          sudo modprobe exfat || {
+            sudo apt-get install -y "linux-modules-extra-$(uname -r)"
+            sudo modprobe exfat
+          }
       - run: cargo build -p tijori-cli --locked
       - name: CLI on a real exFAT volume (loop image on Linux, hdiutil image on macOS)
         run: scripts/e2e.sh target/debug/tijori
