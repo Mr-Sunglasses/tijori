@@ -1,8 +1,26 @@
 //! Formatting for terminal output.
 
-use std::io::IsTerminal;
+use std::io::{self, IsTerminal, Write};
 
 use indicatif::{ProgressBar, ProgressStyle};
+
+/// Writes a line to standard output. If the reader has gone away (for
+/// example `tijori ls | head -1`), exit quietly instead of panicking.
+pub fn write_line(args: std::fmt::Arguments) {
+    if let Err(e) = writeln!(io::stdout().lock(), "{args}") {
+        if e.kind() == io::ErrorKind::BrokenPipe {
+            std::process::exit(0);
+        }
+        eprintln!("tijori: cannot write to standard output: {e}");
+        std::process::exit(1);
+    }
+}
+
+/// `println!` that tolerates a closed pipe.
+macro_rules! out {
+    () => { $crate::output::write_line(format_args!("")) };
+    ($($arg:tt)*) => { $crate::output::write_line(format_args!($($arg)*)) };
+}
 
 /// `1.5 MiB` style sizes.
 pub fn size(bytes: u64) -> String {
@@ -70,10 +88,8 @@ pub const RECOVERY_WARNING: &str = "If you lose both your password and this reco
 /// Prints the recovery phrase as 6 rows of 4 numbered words, with the warning.
 pub fn print_recovery_phrase(words: &str) {
     let words: Vec<&str> = words.split(' ').collect();
-    println!(
-        "Your recovery phrase. Write it down and keep it somewhere safe; it is shown only once:"
-    );
-    println!();
+    out!("Your recovery phrase. Write it down and keep it somewhere safe; it is shown only once:");
+    out!();
     for row in words.chunks(4).enumerate() {
         let cells: Vec<String> = row
             .1
@@ -81,10 +97,10 @@ pub fn print_recovery_phrase(words: &str) {
             .enumerate()
             .map(|(i, w)| format!("{:>2}. {w:<9}", row.0 * 4 + i + 1))
             .collect();
-        println!("  {}", cells.join("  ").trim_end());
+        out!("  {}", cells.join("  ").trim_end());
     }
-    println!();
-    println!("{RECOVERY_WARNING}");
+    out!();
+    out!("{RECOVERY_WARNING}");
 }
 
 /// A byte progress bar on stderr, hidden when stderr is not a terminal.

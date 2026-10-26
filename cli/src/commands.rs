@@ -82,13 +82,13 @@ pub fn init(
         eprintln!("Tuning the key derivation to take about a second on this computer...");
     }
     let (vault, phrase) = Vault::create(Arc::new(StdFsStorage::new(drive)), opts)?;
-    println!();
+    out!();
     print_recovery_phrase(&phrase.words());
-    println!();
+    out!();
     drop(phrase);
     input.confirm_typed(&format!("Type {UNDERSTAND} to continue: "), UNDERSTAND)?;
     vault.lock()?;
-    println!("Vault created on {}.", drive.display());
+    out!("Vault created on {}.", drive.display());
     Ok(())
 }
 
@@ -201,7 +201,7 @@ pub fn break_lock(global: &GlobalArgs, input: &mut Input, force: bool) -> Result
     let drive = crate::drive::resolve(global.vault.as_deref())?;
     let storage = StdFsStorage::new(&drive);
     let Some(info) = read_lock(&storage)? else {
-        println!("The vault is not locked.");
+        out!("The vault is not locked.");
         return Ok(());
     };
     if !info.is_stale() && !force {
@@ -216,7 +216,7 @@ pub fn break_lock(global: &GlobalArgs, input: &mut Input, force: bool) -> Result
     );
     input.confirm_typed("Type BREAK to remove the lock: ", "BREAK")?;
     core_break_lock(&storage)?;
-    println!("Lock removed.");
+    out!("Lock removed.");
     Ok(())
 }
 
@@ -234,13 +234,13 @@ fn print_entries(entries: &[tijori_core::Entry], long: bool) {
             } else {
                 e.size.to_string()
             };
-            println!(
+            out!(
                 "{kind} {size:>12}  {}  {}{slash}",
                 output::utc_minutes(e.mtime_ms),
                 e.name
             );
         } else {
-            println!("{}{slash}", e.name);
+            out!("{}{slash}", e.name);
         }
     }
 }
@@ -262,7 +262,7 @@ fn slot_description(
 
 fn print_settings(v: &Vault) {
     let s = v.settings();
-    println!(
+    out!(
         "Label:        {}",
         if s.label.is_empty() {
             "(none)"
@@ -270,14 +270,14 @@ fn print_settings(v: &Vault) {
             &s.label
         }
     );
-    println!("Padding:      {}", on_off(s.padding));
-    println!("Private only: {}", on_off(s.private_only));
+    out!("Padding:      {}", on_off(s.padding));
+    out!("Private only: {}", on_off(s.private_only));
 }
 
 fn show_new_phrase(input: &mut Input, words: &str) -> Result<()> {
-    println!();
+    out!();
     print_recovery_phrase(words);
-    println!();
+    out!();
     input.confirm_typed(&format!("Type {UNDERSTAND} to continue: "), UNDERSTAND)
 }
 
@@ -298,9 +298,9 @@ fn execute(
             let dest = vp(&paths.pop().expect("clap requires 2 paths"))?;
             let sources: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
             let t = transfer::put(v, &sources, &dest)?;
-            println!("Added {} to {dest}.", counts(t.files, t.bytes, t.dirs));
+            out!("Added {} to {dest}.", counts(t.files, t.bytes, t.dirs));
             if t.skipped > 0 {
-                println!(
+                out!(
                     "Skipped {} item{}.",
                     t.skipped,
                     if t.skipped == 1 { "" } else { "s" }
@@ -311,7 +311,7 @@ fn execute(
             let local = PathBuf::from(paths.pop().expect("clap requires 2 paths"));
             let sources = paths.iter().map(|p| vp(p)).collect::<Result<Vec<_>>>()?;
             let t = transfer::get(v, &sources, &local)?;
-            println!(
+            out!(
                 "Copied {} to {}.",
                 counts(t.files, t.bytes, t.dirs),
                 local.display()
@@ -325,7 +325,7 @@ fn execute(
                 v.mkdir(&path)?
             }
             v.commit()?;
-            println!("Created {path}");
+            out!("Created {path}");
         }
         VaultCommand::Mv { from, to } => {
             let (from, mut to) = (vp(&from)?, vp(&to)?);
@@ -337,13 +337,13 @@ fn execute(
             }
             v.rename(&from, &to)?;
             v.commit()?;
-            println!("Moved {from} to {to}");
+            out!("Moved {from} to {to}");
         }
         VaultCommand::Rm { path, recursive } => {
             let path = vp(&path)?;
             v.remove(&path, recursive)?;
             v.commit()?;
-            println!("Deleted {path}");
+            out!("Deleted {path}");
         }
         VaultCommand::Cat { path } => transfer::cat(v, &vp(&path)?)?,
         VaultCommand::Passwd { slot } => {
@@ -381,19 +381,19 @@ fn execute(
             let label = v.settings().label.clone();
             let password = input.new_password(&[label.as_str(), "tijori"])?;
             v.change_password(index, password, keyfile)?;
-            println!("Changed the password of keyslot {index}.");
-            println!("{PASSWORD_CHANGE_NOTE}");
+            out!("Changed the password of keyslot {index}.");
+            out!("{PASSWORD_CHANGE_NOTE}");
         }
         VaultCommand::Keyslot { action } => match action {
             KeyslotAction::List => {
-                println!("Slot  Type");
+                out!("Slot  Type");
                 for k in v.keyslots() {
                     let used = if k.index == s.report.slot_index {
                         "  (used to unlock)"
                     } else {
                         ""
                     };
-                    println!(
+                    out!(
                         "{:>4}  {}{used}",
                         k.index,
                         slot_description(k.kind, k.slot_type, k.argon)
@@ -404,7 +404,7 @@ fn execute(
                 if recovery {
                     let (index, phrase) = v.add_keyslot(NewSlot::Recovery)?;
                     let phrase = phrase.expect("recovery slots return a phrase");
-                    println!("Added a recovery phrase in keyslot {index}.");
+                    out!("Added a recovery phrase in keyslot {index}.");
                     show_new_phrase(input, &phrase.words())?;
                 } else {
                     let keyfile = keyfile.as_deref().map(open_keyfile).transpose()?;
@@ -416,7 +416,7 @@ fn execute(
                         keyfile,
                         argon: argon_choice(),
                     })?;
-                    println!(
+                    out!(
                         "Added a {} in keyslot {index}.",
                         if with_kf {
                             "password + keyfile"
@@ -428,17 +428,17 @@ fn execute(
             }
             KeyslotAction::Remove { index } => {
                 v.remove_keyslot(index)?;
-                println!("Removed keyslot {index}.");
+                out!("Removed keyslot {index}.");
                 if index == s.report.slot_index {
-                    println!("That was the keyslot you unlocked with; use another one next time.");
+                    out!("That was the keyslot you unlocked with; use another one next time.");
                 }
             }
         },
         VaultCommand::Rekey => {
-            println!(
+            out!(
                 "Re-keying re-encrypts every file under a new master key. Afterwards the vault has exactly"
             );
-            println!(
+            out!(
                 "one password and one new recovery phrase; other keyslots and the old recovery phrase stop working."
             );
             let label = v.settings().label.clone();
@@ -458,7 +458,7 @@ fn execute(
                 true
             })?;
             bar.finish_and_clear();
-            println!("Re-keyed: revision {}.", v.rev());
+            out!("Re-keyed: revision {}.", v.rev());
             if let Some(p) = phrase {
                 show_new_phrase(input, &p.words())?;
             }
@@ -471,7 +471,7 @@ fn execute(
                 true
             })?;
             bar.finish_and_clear();
-            println!(
+            out!(
                 "Checked {} folder{} and {} file{} ({}).",
                 report.dirs,
                 if report.dirs == 1 { "" } else { "s" },
@@ -480,10 +480,10 @@ fn execute(
                 output::size(report.bytes)
             );
             if report.is_ok() {
-                println!("No problems found.");
+                out!("No problems found.");
             } else {
                 for p in &report.problems {
-                    println!(
+                    out!(
                         "{} {}: {}",
                         p.class.vector_name().to_uppercase(),
                         p.path,
@@ -515,7 +515,7 @@ fn execute(
         }
         VaultCommand::Gc => {
             let r = v.gc()?;
-            println!(
+            out!(
                 "Removed {} unused object{} ({}); {} in use.",
                 r.removed,
                 if r.removed == 1 { "" } else { "s" },
@@ -525,11 +525,11 @@ fn execute(
         }
         VaultCommand::Info => {
             let (major, minor) = v.format_version();
-            println!("Drive:        {}", s.drive.display());
-            println!("Format:       {major}.{minor}");
-            println!("Vault ID:     {}", output::uuid(&v.vault_uuid()));
-            println!("Revision:     {}", v.rev());
-            println!(
+            out!("Drive:        {}", s.drive.display());
+            out!("Format:       {major}.{minor}");
+            out!("Vault ID:     {}", output::uuid(&v.vault_uuid()));
+            out!("Revision:     {}", v.rev());
+            out!(
                 "Last written: {} UTC",
                 output::utc_minutes(v.last_written() as i64 * 1000)
             );
@@ -545,13 +545,13 @@ fn execute(
                     )
                 })
                 .collect();
-            println!("Keyslots:     {}", slots.join("; "));
+            out!("Keyslots:     {}", slots.join("; "));
             let mode = match v.read_only_reason() {
                 None => "read-write".to_string(),
                 Some(ReadOnlyReason::Requested) => "read-only".to_string(),
                 Some(r) => format!("read-only ({r:?})"),
             };
-            println!("Opened:       {mode}");
+            out!("Opened:       {mode}");
         }
         VaultCommand::Settings {
             padding,
@@ -572,7 +572,7 @@ fn execute(
                 }
                 v.set_settings(new)?;
                 v.commit()?;
-                println!("Settings saved. Padding applies to files added from now on.");
+                out!("Settings saved. Padding applies to files added from now on.");
             }
             print_settings(v);
         }

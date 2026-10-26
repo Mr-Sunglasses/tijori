@@ -290,7 +290,22 @@ pub fn cat(vault: &mut Vault, path: &VaultPath) -> Result<()> {
     let mut reader = vault.read_file(path)?;
     let stdout = io::stdout();
     let mut out = stdout.lock();
-    io::copy(&mut reader, &mut out).map_err(|e| Error::from_io(e, "reading from the vault"))?;
-    out.flush()?;
-    Ok(())
+    let mut buf = vec![0u8; 64 * 1024];
+    loop {
+        let n = reader
+            .read(&mut buf)
+            .map_err(|e| Error::from_io(e, "reading from the vault"))?;
+        if n == 0 {
+            break;
+        }
+        match out.write_all(&buf[..n]) {
+            // The reader went away (e.g. `| head`): stop quietly.
+            Err(e) if e.kind() == io::ErrorKind::BrokenPipe => return Ok(()),
+            r => r?,
+        }
+    }
+    match out.flush() {
+        Err(e) if e.kind() != io::ErrorKind::BrokenPipe => Err(e.into()),
+        _ => Ok(()),
+    }
 }

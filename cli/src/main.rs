@@ -1,9 +1,10 @@
 //! `tijori`: create and use encrypted vaults on USB drives.
 
+#[macro_use]
+mod output;
 mod commands;
 mod drive;
 mod error;
-mod output;
 mod prompt;
 mod session;
 mod transfer;
