@@ -11,5 +11,17 @@ publish.workspace = true
 name = "tijori"
 path = "src/main.rs"
 
+[dependencies]
+clap = { version = "4.6", features = ["derive", "wrap_help"] }
+indicatif = "0.18"
+rpassword = "7.5"
+shlex = "2.0"
+tijori-core = { path = "../core", features = ["host"] }
+zeroize = "1.9"
+
+[dev-dependencies]
+insta = { version = "1.49", features = ["filters"] }
+tempfile = "3"
+
 [lints]
 workspace = true
